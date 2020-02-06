@@ -1,0 +1,10 @@
+install.packages("BiocManager")
+BiocManager::install("devtools")
+BiocManager::install("bitops")
+#install.packages("/nv/hswarm1/schockalingam6/data/downloads/caTools_1.17.1.4.tar.gz", repos=NULL, type="source")
+BiocManager::install("Seurat")
+devtools::install_github('satijalab/seurat-data')
+library(Seurat)
+library(SeuratData)
+InstallData("panc8")
+
