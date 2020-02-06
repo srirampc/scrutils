@@ -40,7 +40,7 @@ def seurat_wf_plots(adata, out_dir, out_prefix, mito_prefix):
     sc.pp.scale(adata, max_value=10)
     # PCA
     sc.tl.pca(adata, svd_solver='arpack')
-    sc.pl.pca(adata, color='CST3', save=out_prefix, show=False)
+    #sc.pl.pca(adata, color='CST3', save=out_prefix, show=False)
     sc.pl.pca_variance_ratio(adata, log=True, save=out_prefix, show=False)
 
 def recipe_seurat(adata: AnnData, out_dir, out_prefix,
