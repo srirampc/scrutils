@@ -3,7 +3,40 @@ import pandas as pd
 import scanpy as sc
 import sys
 import argparse
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import seaborn as sb
 from anndata import AnnData
+
+def scanpy_qc(adata, out_dir, out_prefix, mito_prefix):
+    adata.var_names_make_unique()
+    #
+    sc.pp.calculate_qc_metrics(adata, inplace=True)
+    adata.var['mt'] = [gene.startswith(mito_prefix) for gene in adata.var_names]
+    adata.obs['mt_frac'] = adata[:, adata.var['mt']].X.sum(1).A.squeeze()/adata.obs['total_counts']
+    fig, axs = plt.subplots(1,4, figsize=(15,4))
+    fig.suptitle('Covariates for filtering')
+    sb.distplot(adata.obs['total_counts'], kde=False, ax = axs[0])
+    sb.distplot(adata.obs['total_counts'][adata.obs['total_counts']<10000], kde=False, bins=40, ax = axs[1])
+    sb.distplot(adata.obs['n_genes_by_counts'], kde=False, bins=60, ax = axs[2])
+    sb.distplot(adata.obs['n_genes_by_counts'][adata.obs['n_genes_by_counts']<4000], kde=False, bins=60, ax = axs[3])
+    fig.savefig(out_dir + "/visum_qc_histo" + out_prefix )
+    with open(out_dir + "/visum_qc_thres.txt", 'w') as ofx:
+        sc.pp.filter_cells(adata, min_counts = 5000)
+        ofx.write(f'Number of cells after min count filter (>5K) : {adata.n_obs}')
+        ofx.write("\n")
+        sc.pp.filter_cells(adata, max_counts = 35000)
+        ofx.write(f'Number of cells after max count filter (<35K) : {adata.n_obs}')
+        ofx.write("\n")
+        adata = adata[adata.obs['mt_frac'] < 0.2]
+        ofx.write(f'Number of cells after MT filter (< 0.2) : {adata.n_obs}')
+        ofx.write("\n")
+        sc.pp.filter_cells(adata, min_genes = 3000)
+        ofx.write(f'Number of cells after gene filter (min. 3K) : {adata.n_obs}')
+        ofx.write("\n")
+        sc.pp.filter_genes(adata, min_cells=10)
+        ofx.write(f'Number of genes after cell filter (min. 10) : {adata.n_vars}')
+        ofx.write("\n")
 
 def seurat_wf_plots(adata, out_dir, out_prefix, mito_prefix):
     sc.pl.highest_expr_genes(adata, n_top=20, save=out_prefix, show=False)
@@ -11,7 +44,7 @@ def seurat_wf_plots(adata, out_dir, out_prefix, mito_prefix):
     sc.pp.filter_cells(adata, min_genes=200)
     sc.pp.filter_genes(adata, min_cells=3)
     #
-    mito_genes = adata.var_names.str.startswith('mito_prefix')
+    mito_genes = adata.var_names.str.startswith(mito_prefix)
     out_prefix = '_seuratwf' + out_prefix
     # for each cell compute fraction of counts in mito genes vs. all genes
     # the `.A1` is only necessary as X is sparse (to transform to a dense array after summing)
@@ -36,12 +69,22 @@ def seurat_wf_plots(adata, out_dir, out_prefix, mito_prefix):
     sc.pl.highly_variable_genes(adata, save=out_prefix, show=False)
     #
     adata = adata[:, adata.var.highly_variable]
-    #sc.pp.regress_out(adata, ['n_counts', 'percent_mito'])
+    sc.pp.regress_out(adata, ['n_counts', 'percent_mito'], copy=True)
     sc.pp.scale(adata, max_value=10)
     # PCA
     sc.tl.pca(adata, svd_solver='arpack')
-    sc.pl.pca(adata, color='CST3', save=out_prefix, show=False)
+    sc.pl.pca(adata, save=out_prefix, show=False)
     sc.pl.pca_variance_ratio(adata, log=True, save=out_prefix, show=False)
+    # UMAP
+    sc.pp.neighbors(adata, n_neighbors=10, n_pcs=40)
+    #sc.tl.paga(adata)
+    #sc.pl.paga(adata, plot=False)
+    sc.tl.umap(adata)
+    sc.pl.umap(adata, save=out_prefix, show=False)
+    # t-SNE
+    sc.tl.tsne(adata)
+    sc.pl.tsne(adata, save=out_prefix, show=False)
+
 
 def recipe_seurat(adata: AnnData, out_dir, out_prefix,
                   log: bool = True, copy: bool = False, ):
@@ -102,9 +145,11 @@ def main(src_dir, out_dir, out_prefix, mito_prefix):
     adata.var_names_make_unique()
     adata2 = adata.copy()
     adata3 = adata.copy()
+    adata4 = adata.copy()
     seurat_wf_plots(adata, out_dir, out_prefix, mito_prefix)
     recipe_seurat(adata2, out_dir, out_prefix)
     recipe_zheng17(adata3, out_dir, out_prefix)
+    scanpy_qc(adata4, out_dir, out_prefix, mito_prefix)
 
 
 
