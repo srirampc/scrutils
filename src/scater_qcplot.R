@@ -337,7 +337,10 @@ plot_ngenes = function(per.cell, fname){
     ngenes_3madsp = ngenes_med + 3 * ngenes_mad
     ngenes_2madsp = ngenes_med + 2 * ngenes_mad
     ngenes_1madsp = ngenes_med +  ngenes_mad
-    # cat("median, mad, 3MAD, 2MAD", ngenes_med, ngenes_mad, sum(log_ngenesf < ngenes_3mads), sum(log_ngenesf < ngenes_2mads), "\n")
+    cat("Ngenes : median, mad, <3MADP, >1MAD Both", ngenes_med, ngenes_mad, 
+      sum(log_ngenesf < ngenes_3madsp), sum(log_ngenesf > ngenes_1mads),
+      sum(log_ngenesf < ngenes_3madsp & log_ngenesf > ngenes_1mads)
+         "\n")
     hist(log_ngenesf, breaks=120, xlab=expression(Log[10]~"No. genes"), ylab="No. cells", main=dirx, prob=FALSE)
     abline(v = ngenes_3mads, col='red', lwd=2)
     abline(v = ngenes_2mads, col='blue', lwd=2)
