@@ -15,8 +15,8 @@ mcg_cell_filter = function(dfx){
     mcg_med = median(log_mcg)
     mcg_3madsp = mcg_med + 3 * mcg_mad
     mcg_threshold = min(5, 10^mcg_3madsp)
-    cat("MCG Upper bound :", mcg_threshold)
-    (mcgpct > min_mcg)
+    cat("\n MCG Upper bound :", mcg_threshold)
+    (mcgpct > mcg_threshold)
 }
 
 ngenes_cell_filter = function(dfx){
@@ -28,8 +28,8 @@ ngenes_cell_filter = function(dfx){
     ngenes_mad = mad(log_ngenes)
     ngenes_med = median(log_ngenes)
     ngenes_1mads = ngenes_med -  ngenes_mad
-    cat("Genes Lower bound :", 10^ngenes_1mads)
-    (log_ngenes > ngenes_1mads)
+    cat("\n Genes Lower bound :", 10^ngenes_1mads)
+    (log_ngenes < ngenes_1mads)
 }
 
 avgcounts_cell_filter = function(dfx){
@@ -41,27 +41,27 @@ avgcounts_cell_filter = function(dfx){
     lmean_mad = mad(log_libmean)
     lmean_med = median(log_libmean)
     lmean_1mads = lmean_med - lmean_mad
-    cat("Genes Lower bound :", lmean_1mads, 10^lmean_1mads)
-    (log_libmean > lmean_1mads)
+    cat("\n Avg.cts Lower bound :", lmean_1mads, 10^lmean_1mads)
+    (log_libmean < lmean_1mads)
 }
 
 
 apply_filters = function(out_dir, out_prefix, in_dirs){
     for(dirx in in_dirs){
         dfx = read10xCounts(dirx)
-        cat("Dims: ",  dirx, dim(dfx), "\n")
+        cat("Dims: ",  dirx, dim(dfx))
         # per.feat = perFeatureQCMetrics(dfx)
-        mcg_drop = mcg_filter(dfx)
-        ngenes_drop = ngenes_cell_filer(dfx)
+        mcg_drop = mcg_cell_filter(dfx)
+        ngenes_drop = ngenes_cell_filter(dfx)
         avgcts_drop = avgcounts_cell_filter(dfx)
         nlength = dim(dfx)[2]
-        cat(dirx, nlength,
-            " MCG,", sum(mcg_drop), sum(mcg_drop)*100/nlength, 
-            " NGENES: ", sum(ngenes_drop), sum(ngenes_drop)*100/nlength, 
-            " AVGCTS: ", sum(avgcts_drop), sum(avgcts_drop)*100/nlength,
-            " ALL : ",
+        cat("\n MCG,", sum(mcg_drop), sum(mcg_drop)*100/nlength, 
+            "\n NGENES: ", sum(ngenes_drop), sum(ngenes_drop)*100/nlength, 
+            "\n AVGCTS: ", sum(avgcts_drop), sum(avgcts_drop)*100/nlength,
+            "\n ALL : ",
             sum(mcg_drop | ngenes_drop | avgcts_drop),
             sum(mcg_drop | ngenes_drop | avgcts_drop)*100/nlength)
+       cat("\n")
     }
 }
 
