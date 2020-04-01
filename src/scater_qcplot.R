@@ -259,7 +259,15 @@ plot_counts_logavg_hist = function(per.cell, dfx, dirx, fname){
     lmean_3sdsp = lmean_mean + 3 * lmean_dev
     lmean_2sdsp = lmean_mean + 2 * lmean_dev
     lmean_1sdsp = lmean_mean + lmean_dev
-    #cat("median, mad, 3MAD, 2MAD", lmean_med, lmean_mad, sum(log_libmeanf < lmean_3mads), sum(log_libmeanf < lmean_2mads), "\n")
+    nlength = length(log_libmeanf)
+    cat("Log Avg counts median, mad, 3MAD, 2MAD", 
+      lmean_med, lmean_mad, 
+      sum(log_libmeanf < lmean_3madsp), sum(log_libmeanf > lmean_1madsp),
+      sum(log_libmeanf < lmean_3madsp & log_libmeanf > lmean_1madsp),
+      sum(log_libmeanf < lmean_3madsp)/nlength, 
+      sum(log_libmeanf > lmean_1madsp)/nlength,
+      sum(log_libmeanf < lmean_3madsp & log_libmeanf > lmean_1madsp)/nlength,
+       "\n")
     hist(log_libmean, breaks=120, xlab=expression(Log[10]~"Avg. No. Reads"), ylab="No. cells", main=dirx, prob=FALSE)
     abline(v = lmean_3mads, col='red', lwd=2)
     abline(v = lmean_2mads, col='blue', lwd=2)
@@ -302,7 +310,6 @@ plot_counts_logavg_hist2 = function(per.cell, lmean_3madsp, dfx, dirx, fname){
     lmean_3sdsp = lmean_mean + 3 * lmean_dev
     lmean_2sdsp = lmean_mean + 2 * lmean_dev
     lmean_1sdsp = lmean_mean + lmean_dev
-    #cat("median, mad, 3MAD, 2MAD", lmean_med, lmean_mad, sum(log_libmeanf < lmean_3mads), sum(log_libmeanf < lmean_2mads), "\n")
     hist(log_libmean, breaks=120, xlab=expression(Log[10]~"Avg. No. Reads"),
 	 ylab="No. cells", main=dirx, prob=FALSE)
     abline(v = lmean_3mads, col='red', lwd=2)
@@ -338,10 +345,16 @@ plot_ngenes = function(per.cell, dirx, fname){
     ngenes_3madsp = ngenes_med + 3 * ngenes_mad
     ngenes_2madsp = ngenes_med + 2 * ngenes_mad
     ngenes_1madsp = ngenes_med +  ngenes_mad
-    cat("Ngenes : median, mad, <3MADP, >1MAD Both", ngenes_med, ngenes_mad, 
-      sum(log_ngenesf < ngenes_3madsp), sum(log_ngenesf > ngenes_1mads),
-      sum(log_ngenesf < ngenes_3madsp & log_ngenesf > ngenes_1mads)
-         "\n")
+    nlength = length(log_ngenesf)
+    cat("Log Ngenes : median, mad, <3MADP, >1MAD Both",
+      ngenes_med, ngenes_mad, 
+      sum(log_ngenesf < ngenes_3madsp), 
+      sum(log_ngenesf > ngenes_1mads),
+      sum(log_ngenesf < ngenes_3madsp & log_ngenesf > ngenes_1mads),
+      sum(log_ngenesf < ngenes_3madsp)/nlength,
+      sum(log_ngenesf > ngenes_1mads)/nlength,
+      sum(log_ngenesf < ngenes_3madsp & log_ngenesf > ngenes_1mads)/nlength
+        "\n")
     hist(log_ngenesf, breaks=120, xlab=expression(Log[10]~"No. genes"), ylab="No. cells", main=dirx, prob=FALSE)
     abline(v = ngenes_3mads, col='red', lwd=2)
     abline(v = ngenes_2mads, col='blue', lwd=2)
