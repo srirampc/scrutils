@@ -35,19 +35,7 @@ seurat_qcplot = function(data.dir, all_thrs, out.dir, out.prefix, plot.suffix){
 		  sep="/"  )
     ggsave(fname, p4, width=14, height=7)
 }
-
-point_plots = function(per.cell, per.feat, dix, out_dir, out_prefix){
-    featavg = per.feat$mean 
-    featcts = per.feat$detected * dim(dfx)[2]/100.0
-    libsize = per.cell$sum
-    ngenes = per.cell$detected
-    mcgpct = per.cell$subsets_MCG_percent
-    log_libsize = log10(libsize)
-    log_featcts = log10(featcts)
-    log_ngenes = log10(ngenes)
-    log_mcg = log10(mcgpct)
-    log_favg = log10(featavg)
-    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-feat-filp-hist.png", sep=""), sep="/"  )
+plot_feat_flip_hist = function(log_featcts, fname){
     png(file=fname)
     xhist = hist(log_featcts, breaks=200,plot = FALSE)
     plot(x = xhist$mids, y = xhist$counts, type='h',
@@ -59,8 +47,9 @@ point_plots = function(per.cell, per.feat, dix, out_dir, out_prefix){
     #print(xrnmidv)
     abline(v = xrnmidv, col='blue')
     dev.off()
-    
-    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-counts-flip-hist.png", sep=""), sep="/"  )
+}
+
+plot_counts_flip_hist = function(log_libsize, fname){
     png(file=fname)
     xhist = hist(log_libsize, breaks=200,plot = FALSE)
     plot(x = xhist$mids, y = xhist$counts, type='h', xlab="No. cells", ylab=expression(Log[10]~"No. Reads"))
@@ -72,6 +61,25 @@ point_plots = function(per.cell, per.feat, dix, out_dir, out_prefix){
     #print(xrnmidv)
     abline(v = xrnmidv, col='blue')
     dev.off()
+}
+
+point_plots = function(per.cell, per.feat, dix, out_dir, out_prefix){
+    featavg = per.feat$mean 
+    featcts = per.feat$detected * dim(dfx)[2]/100.0
+    libsize = per.cell$sum
+    ngenes = per.cell$detected
+    mcgpct = per.cell$subsets_MCG_percent
+    log_libsize = log10(libsize); 
+    log_featcts = log10(featcts)
+    log_ngenes = log10(ngenes) 
+    log_mcg = log10(mcgpct)
+    log_favg = log10(featavg)
+    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-feat-filp-hist.png", sep=""), sep="/"  )
+    plot_feat_flip_hist(log_featcts, fname)
+    
+    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-counts-flip-hist.png", sep=""), sep="/"  )
+    plot_counts_flip_hist(log_libsize, fname)
+    
     fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-ngenes-flip-hist.png", sep=""), sep="/"  )
     png(file=fname)
     xhist = hist(ngenes, breaks=200,plot = FALSE)
