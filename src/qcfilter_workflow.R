@@ -58,6 +58,21 @@ avgcounts_cell_filter = function(dfx){
     (log_libmean < lmean_1mads)
 }
 
+plot_after_drop = function(dfx, dirx, name_prefix, out_dir, out_prefix){
+    per.cell = perCellQCMetrics(dfx, 
+        subset=list(MCG=grep("AT[MC]G",
+                        rownames(dfx))))
+    fname = paste(out_dir, dirx,
+        paste(out_prefix, name_prefix,
+         "-scater-qc-feats-avg-hist.png", sep=""),
+        sep="/"  )
+    plot_feat_avg_hist(per.feat, dirx, fname)
+    fname = paste(out_dir, dirx,
+        paste(out_prefix, name_prefix,
+        "-scater-qc-counts-avg-hist.png", sep=""),
+        sep="/"  )
+    plot_counts_avg_hist(per.cell, dfx, dirx, fname)
+}
 
 apply_filters = function(out_dir, out_prefix, in_dirs){
 
@@ -80,19 +95,31 @@ apply_filters = function(out_dir, out_prefix, in_dirs){
         ngenes_lb_drop = ngenes_cell_filter_lb(dfx)
         cat(" ", sum(ngenes_lb_drop), sum(ngenes_lb_drop)*100/nlength)
         ngenes_ub_drop = ngenes_cell_filter_ub(dfx)
-        cat(" ", sum(ngenes_lb_drop), sum(ngenes_lb_drop)*100/nlength)
+        cat(" ", sum(ngenes_ub_drop), sum(ngenes_ub_drop)*100/nlength)
         avgcts_drop = avgcounts_cell_filter(dfx)
         cat(" ", sum(avgcts_drop), sum(avgcts_drop)*100/nlength)
+        mcg_ngenes_drop = mcg_drop | ngenes_lb_drop | ngenes_ub_drop
+        all_lb_drop = mcg_drop | ngenes_lb_drop | avgcts_drop
+        all_drop = mcg_drop | ngenes_lb_drop | ngenes_ub_drop | avgcts_drop
         cat(" ",
-            sum(mcg_drop | ngenes_lb_drop | ngenes_ub_drop),
-            sum(mcg_drop | ngenes_lb_drop | ngenes_ub_drop)*100/nlength)
+            sum(mcg_ngenes_drop),
+            sum(mcg_ngenes_drop)*100/nlength)
         cat(" ",
-            sum(mcg_drop | ngenes_lb_drop | avgcts_drop),
-            sum(mcg_drop | ngenes_lb_drop | avgcts_drop)*100/nlength)
+            sum(all_lb_drop),
+            sum(all_lb_drop)*100/nlength)
         cat(" ",
-            sum(mcg_drop | ngenes_lb_drop | ngenes_ub_drop | avgcts_drop),
-            sum(mcg_drop | ngenes_lb_drop | ngenes_ub_drop | avgcts_drop)*100/nlength)
+            sum(all_drop),
+            sum(all_drop)*100/nlength)
        cat("\n")
+       dfx2 = dfx[, mcg_ngenes_drop]
+       plot_after_drop(dfx2, dirx, "-after-mcg-ngenes",
+                       out_dir, out_prefix)
+       dfx3 = dfx[, all_lb_drop]
+       plot_after_drop(dfx3, dirx, "-after-all-lb-ngenes",
+                       out_dir, out_prefix)
+       dfx4 = dfx[, all_drop]
+       plot_after_drop(dfx3, dirx, "-after-all-drop-ngenes",
+                       out_dir, out_prefix)
     }
 }
 
