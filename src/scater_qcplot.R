@@ -260,13 +260,16 @@ plot_counts_logavg_hist = function(per.cell, dfx, dirx, fname){
     lmean_2sdsp = lmean_mean + 2 * lmean_dev
     lmean_1sdsp = lmean_mean + lmean_dev
     nlength = length(log_libmeanf)
-    cat("Log Avg counts median, mad, 3MAD, 2MAD", 
-      lmean_med, lmean_mad, 
-      sum(log_libmeanf < lmean_3madsp), sum(log_libmeanf > lmean_1madsp),
-      sum(log_libmeanf < lmean_3madsp & log_libmeanf > lmean_1madsp),
-      sum(log_libmeanf < lmean_3madsp)/nlength, 
-      sum(log_libmeanf > lmean_1madsp)/nlength,
-      sum(log_libmeanf < lmean_3madsp & log_libmeanf > lmean_1madsp)/nlength,
+    cat("Log Avg counts ", 
+      "median : ", 10^lmean_med, 10^lmean_mad,
+      "LB avg cts: ", 10^lmean_1mads, 
+      "UB avg cts: ", 10^lmean_3madsp,
+      "LB ncells:", sum(log_libmeanf > lmean_1mads),
+      sum(log_libmeanf > lmean_1mads)*100/nlength,
+      "UB ncells:", sum(log_libmeanf < lmean_3madsp), 
+      sum(log_libmeanf < lmean_3madsp)*100/nlength, 
+      "UB+LB ncells:", sum(log_libmeanf < lmean_3madsp & log_libmeanf > lmean_1mads),
+      sum(log_libmeanf < lmean_3madsp & log_libmeanf > lmean_1mads)*100/nlength,
        "\n")
     hist(log_libmean, breaks=120, xlab=expression(Log[10]~"Avg. No. Reads"), ylab="No. cells", main=dirx, prob=FALSE)
     abline(v = lmean_3mads, col='red', lwd=2)
@@ -346,14 +349,16 @@ plot_ngenes = function(per.cell, dirx, fname){
     ngenes_2madsp = ngenes_med + 2 * ngenes_mad
     ngenes_1madsp = ngenes_med +  ngenes_mad
     nlength = length(log_ngenesf)
-    cat("Log Ngenes : median, mad, <3MADP, >1MAD Both",
-      ngenes_med, ngenes_mad, 
-      sum(log_ngenesf < ngenes_3madsp), 
-      sum(log_ngenesf > ngenes_1mads),
-      sum(log_ngenesf < ngenes_3madsp & log_ngenesf > ngenes_1mads),
-      sum(log_ngenesf < ngenes_3madsp)/nlength,
-      sum(log_ngenesf > ngenes_1mads)/nlength,
-      sum(log_ngenesf < ngenes_3madsp & log_ngenesf > ngenes_1mads)/nlength
+    cat("Log Ngenes : ",
+      "Median:", 10^ngenes_med, 10^ngenes_mad, 
+      "lB ngenes : ", 10^ngenes_1mads, 
+      "uB ngenes : ", 10^ngenes_3madsp,
+      "LB no. cells", sum(log_ngenesf > ngenes_1mads),
+      sum(log_ngenesf > ngenes_1mads)*100/nlength,
+      "UB no. cells: ", sum(log_ngenesf < ngenes_3madsp), 
+      sum(log_ngenesf < ngenes_3madsp)*100/nlength,
+      "LB+UB no. cells: ", sum(log_ngenesf < ngenes_3madsp & log_ngenesf > ngenes_1mads),
+      sum(log_ngenesf < ngenes_3madsp & log_ngenesf > ngenes_1mads)/nlength,
         "\n")
     hist(log_ngenesf, breaks=120, xlab=expression(Log[10]~"No. genes"), ylab="No. cells", main=dirx, prob=FALSE)
     abline(v = ngenes_3mads, col='red', lwd=2)
@@ -416,9 +421,9 @@ plot_qcstats = function(out_dir, out_prefix, in_dirs){
             subset=list(MCG=grep("AT[MC]G",
                             rownames(dfx))))
         per.feat = perFeatureQCMetrics(dfx)
-        plot_flip_hist(per.cell, per.feat, dfx, dirx, out_dir, out_prefix)
-        # all_thrs = plot_hist(per.cell, per.feat, dfx, dirx, out_dir, out_prefix)
-        # seurat_qcplot(dirx, all_thrs, out_dir, out_prefix, ".png")
+        #plot_flip_hist(per.cell, per.feat, dfx, dirx, out_dir, out_prefix)
+        all_thrs = plot_hist(per.cell, per.feat, dfx, dirx, out_dir, out_prefix)
+        #seurat_qcplot(dirx, all_thrs, out_dir, out_prefix, ".png")
     }
 }
 
