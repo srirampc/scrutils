@@ -104,29 +104,30 @@ plot_hist = function(per.cell, per.feat, dfx, dirx, out_dir, out_prefix){
         sep="/"  )
     plot_ngenes(per.cell, dirx, fname)
 
-    c(mcg=mcg_threshold, feature=feat_cells_threshold)
+    c(mcg=mcg_threshold, feature=feat_cells_threshold, 200)
 }
 
-plot_qcstats = function(out_dir, out_prefix, in_dirs){
+plot_qcstats = function(out_dir, out_prefix, in_base_dir, in_dirs){
     outfile = paste(out_dir, "scater-qc.tsv", sep="/")
-    get_qcstats(outfile, indirs)
+    get_qcstats(outfile, paste(in_base_dir, in_dirs, sep="/"))
     for(dirx in in_dirs){
-        dfx = read10xCounts(dirx)
+        cx.indir = paste(in_base_dir, dirx, sep="/")
+        dfx = read10xCounts(cx.indir)
         per.cell = perCellQCMetrics(dfx, 
             subset=list(MCG=grep("AT[MC]G",
                             rownames(dfx))))
         per.feat = perFeatureQCMetrics(dfx)
         #plot_flip_hist(per.cell, per.feat, dfx, dirx, out_dir, out_prefix)
         all_thrs = plot_hist(per.cell, per.feat, dfx, dirx, out_dir, out_prefix)
-        #seurat_ba_qcplot(dirx, all_thrs, out_dir, out_prefix, ".png")
+        seurat_ba_qcplot(cx.indir, all_thrs, dirx, out_dir, out_prefix, ".png")
     }
 }
 
 args = commandArgs(trailingOnly=TRUE)
 
-if(length(args) >= 3){
-    plot_qcstats(args[1], args[2], args[3:length(args)])
+if(length(args) >= 4){
+    plot_qcstats(args[1], args[2], args[3], args[4:length(args)])
 }  else {
     print(args)
-    print("Usage: Rscript scater_qcplot.R outdir out_prefix indir1 indir2 ...")
+    print("Usage: Rscript scater_qcplot.R outdir out_prefix in_base_dir indir1 indir2 ...")
 }

@@ -103,16 +103,16 @@ plot_counts_avg_hist = function(per.cell, dfx, dirx, fname){
     abline(v = lmean_2madsp, col='blue', lwd=2)
     abline(v = lmean_1madsp, col='purple', lwd=2)
     
-    abline(v = lmean_3sds, col='red', lwd=2, lty=2)
-    abline(v = lmean_2sds, col='blue', lwd=2, lty=2)
-    abline(v = lmean_1sds, col='purple', lwd=2, lty=2)
-    abline(v = lmean_mean, col='darkgreen', lwd=2, lty=2)
-    abline(v = lmean_3sdsp, col='red', lwd=2, lty=2)
-    abline(v = lmean_med, col='darkgreen', lwd=2)
+    #abline(v = lmean_3sds, col='red', lwd=2, lty=2)
+    #abline(v = lmean_2sds, col='blue', lwd=2, lty=2)
+    #abline(v = lmean_1sds, col='purple', lwd=2, lty=2)
+    #abline(v = lmean_mean, col='darkgreen', lwd=2, lty=2)
+    #abline(v = lmean_3sdsp, col='red', lwd=2, lty=2)
+    #abline(v = lmean_med, col='darkgreen', lwd=2)
     dev.off()
 }
 
-plot_counts_logavg_hist = function(per.cell, dfx, dirx, fname){
+plot_counts_logavg_hist = function(per.cell, dfx, dirx, fname, print_values=TRUE){
     libmean = per.cell$sum / dim(dfx)[2]
     log_libmean = log10(libmean)
     png(file=fname)
@@ -135,7 +135,8 @@ plot_counts_logavg_hist = function(per.cell, dfx, dirx, fname){
     lmean_2sdsp = lmean_mean + 2 * lmean_dev
     lmean_1sdsp = lmean_mean + lmean_dev
     nlength = length(log_libmeanf)
-    cat("Log Avg counts ", 
+    if (print_values == TRUE){
+     cat("Log Avg counts ", 
       "median : ", 10^lmean_med, 10^lmean_mad,
       "LB avg cts: ", 10^lmean_1mads, 
       "UB avg cts: ", 10^lmean_3madsp,
@@ -146,6 +147,7 @@ plot_counts_logavg_hist = function(per.cell, dfx, dirx, fname){
       "UB+LB ncells:", sum(log_libmeanf < lmean_3madsp & log_libmeanf > lmean_1mads),
       sum(log_libmeanf < lmean_3madsp & log_libmeanf > lmean_1mads)*100/nlength,
        "\n")
+    }
     hist(log_libmean, breaks=120, xlab=expression(Log[10]~"Avg. No. Reads"), ylab="No. cells", main=dirx, prob=FALSE)
     abline(v = lmean_3mads, col='red', lwd=2)
     abline(v = lmean_2mads, col='blue', lwd=2)
@@ -155,13 +157,13 @@ plot_counts_logavg_hist = function(per.cell, dfx, dirx, fname){
     abline(v = lmean_2madsp, col='blue', lwd=2)
     abline(v = lmean_1madsp, col='purple', lwd=2)
     
-    abline(v = lmean_3sds, col='red', lwd=2, lty=2)
-    abline(v = lmean_2sds, col='blue', lwd=2, lty=2)
-    abline(v = lmean_1sds, col='purple', lwd=2, lty=2)
-    abline(v = lmean_mean, col='darkgreen', lwd=2, lty=2)
-    abline(v = lmean_3sdsp, col='red', lwd=2, lty=2)
-    abline(v = lmean_2sdsp, col='blue', lwd=2, lty=2)
-    abline(v = lmean_1sdsp, col='purple', lwd=2, lty=2)
+    #abline(v = lmean_3sds, col='red', lwd=2, lty=2)
+    #abline(v = lmean_2sds, col='blue', lwd=2, lty=2)
+    #abline(v = lmean_1sds, col='purple', lwd=2, lty=2)
+    #abline(v = lmean_mean, col='darkgreen', lwd=2, lty=2)
+    #abline(v = lmean_3sdsp, col='red', lwd=2, lty=2)
+    #abline(v = lmean_2sdsp, col='blue', lwd=2, lty=2)
+    #abline(v = lmean_1sdsp, col='purple', lwd=2, lty=2)
     dev.off()
     lmean_3madsp
 }
@@ -198,17 +200,17 @@ plot_counts_logavg_hist2 = function(per.cell, lmean_3madsp, dfx, dirx, fname){
     abline(v = lmean_2madsp, col='blue', lwd=2)
     abline(v = lmean_1madsp, col='purple', lwd=2)
     
-    abline(v = lmean_3sds, col='red', lwd=2, lty=2)
-    abline(v = lmean_2sds, col='blue', lwd=2, lty=2)
-    abline(v = lmean_1sds, col='purple', lwd=2, lty=2)
-    abline(v = lmean_mean, col='darkgreen', lwd=2, lty=2)
-    abline(v = lmean_3sdsp, col='red', lwd=2, lty=2)
-    abline(v = lmean_2sdsp, col='blue', lwd=2, lty=2)
-    abline(v = lmean_1sdsp, col='purple', lwd=2, lty=2)
+    #abline(v = lmean_3sds, col='red', lwd=2, lty=2)
+    #abline(v = lmean_2sds, col='blue', lwd=2, lty=2)
+    #abline(v = lmean_1sds, col='purple', lwd=2, lty=2)
+    #abline(v = lmean_mean, col='darkgreen', lwd=2, lty=2)
+    #abline(v = lmean_3sdsp, col='red', lwd=2, lty=2)
+    #abline(v = lmean_2sdsp, col='blue', lwd=2, lty=2)
+    #abline(v = lmean_1sdsp, col='purple', lwd=2, lty=2)
     dev.off()
 }
 
-plot_ngenes = function(per.cell, dirx, fname){
+plot_ngenes = function(per.cell, dirx, fname, print_values=TRUE){
     ngenes = per.cell$detected
     log_ngenes = log10(ngenes)
     png(file=fname)
@@ -224,7 +226,8 @@ plot_ngenes = function(per.cell, dirx, fname){
     ngenes_2madsp = ngenes_med + 2 * ngenes_mad
     ngenes_1madsp = ngenes_med +  ngenes_mad
     nlength = length(log_ngenesf)
-    cat("Log Ngenes : ",
+    if (print_values == TRUE){
+     cat("Log Ngenes : ",
       "Median:", 10^ngenes_med, 10^ngenes_mad, 
       "lB ngenes : ", 10^ngenes_1mads, 
       "uB ngenes : ", 10^ngenes_3madsp,
@@ -235,6 +238,7 @@ plot_ngenes = function(per.cell, dirx, fname){
       "LB+UB no. cells: ", sum(log_ngenesf < ngenes_3madsp & log_ngenesf > ngenes_1mads),
       sum(log_ngenesf < ngenes_3madsp & log_ngenesf > ngenes_1mads)/nlength,
         "\n")
+    }
     hist(log_ngenesf, breaks=120, xlab=expression(Log[10]~"No. genes"), ylab="No. cells", main=dirx, prob=FALSE)
     abline(v = ngenes_3mads, col='red', lwd=2)
     abline(v = ngenes_2mads, col='blue', lwd=2)

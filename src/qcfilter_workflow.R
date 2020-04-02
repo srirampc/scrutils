@@ -2,6 +2,7 @@ library(scater)
 library(DropletUtils)
 library(Seurat)
 library(ggplot2)
+source("scater_plots.R")
 
 mcg_cell_filter = function(dfx){
     per.cell = perCellQCMetrics(dfx, 
@@ -58,23 +59,26 @@ avgcounts_cell_filter = function(dfx){
     (log_libmean < lmean_1mads)
 }
 
-plot_after_drop = function(dfx, dirx, name_prefix, out_dir, out_prefix){
+plot_after_drop = function(dfx, dirx, name_prefix, 
+                           out_dir, out_prefix){
     per.cell = perCellQCMetrics(dfx, 
         subset=list(MCG=grep("AT[MC]G",
                         rownames(dfx))))
+    fname = paste(out_dir, dirx, 
+        paste(out_prefix, name_prefix, 
+              "-scater-qc-counts-logavg-hist.png", sep=""),
+        sep="/"  )
+    # print(fname)
+    plot_counts_logavg_hist(per.cell, dfx, dirx, fname, FALSE)
+
     fname = paste(out_dir, dirx,
         paste(out_prefix, name_prefix,
-         "-scater-qc-feats-avg-hist.png", sep=""),
+          "-scater-qc-ngenes-hist.png", sep=""),
         sep="/"  )
-    plot_feat_avg_hist(per.feat, dirx, fname)
-    fname = paste(out_dir, dirx,
-        paste(out_prefix, name_prefix,
-        "-scater-qc-counts-avg-hist.png", sep=""),
-        sep="/"  )
-    plot_counts_avg_hist(per.cell, dfx, dirx, fname)
+    plot_ngenes(per.cell, dirx, fname, FALSE)
 }
 
-apply_filters = function(out_dir, out_prefix, in_dirs){
+apply_filters = function(out_dir, out_prefix, in_base_dir, in_dirs){
 
     cat("DIR", "NGENES", "NCELLS", 
         "MCG_UB", "MCG_CELLS", "MCG_PCT",
@@ -85,7 +89,8 @@ apply_filters = function(out_dir, out_prefix, in_dirs){
         "ALLLB_CELLS", "ALLLB_PCT", 
         "ALL_CELLS", "ALL_PCT", 
         "\n")
-    for(dirx in in_dirs){
+    for(dx in in_dirs){
+        dirx = paste(in_base_dir, dx, sep="/")
         dfx = read10xCounts(dirx)
         cat(dirx, dim(dfx)[1], dim(dfx)[2])
         nlength = dim(dfx)[2]
@@ -111,23 +116,24 @@ apply_filters = function(out_dir, out_prefix, in_dirs){
             sum(all_drop),
             sum(all_drop)*100/nlength)
        cat("\n")
-       dfx2 = dfx[, mcg_ngenes_drop]
-       plot_after_drop(dfx2, dirx, "-after-mcg-ngenes",
+       dfx2 = dfx[, !mcg_ngenes_drop]
+       plot_after_drop(dfx2, dx, "-after-mcg-ngenes",
                        out_dir, out_prefix)
-       dfx3 = dfx[, all_lb_drop]
-       plot_after_drop(dfx3, dirx, "-after-all-lb-ngenes",
+       dfx3 = dfx[, !all_lb_drop]
+       plot_after_drop(dfx3, dx, "-after-all-lb-ngenes",
                        out_dir, out_prefix)
-       dfx4 = dfx[, all_drop]
-       plot_after_drop(dfx3, dirx, "-after-all-drop-ngenes",
+       dfx4 = dfx[, !all_drop]
+       #print(dim(dfx4))
+       plot_after_drop(dfx4, dx, "-after-all-drop-ngenes",
                        out_dir, out_prefix)
     }
 }
 
 args = commandArgs(trailingOnly=TRUE)
 
-if(length(args) >= 3){
-    apply_filters(args[1], args[2], args[3:length(args)])
+if(length(args) >= 4){
+    apply_filters(args[1], args[2], args[3], args[4:length(args)])
 }  else {
     print(args)
-    print("Usage: Rscript qcfilter_workflow.R outdir out_prefix indir1 indir2 ...")
+    print("Usage: Rscript qcfilter_workflow.R outdir out_prefix in_base_dir indir1 indir2 ...")
 }
