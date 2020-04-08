@@ -58,8 +58,6 @@ logcounts_cell_filter = function(dfx){
     (log_libsize < lsize_1mads)
 }
 
-
-
 avgcounts_cell_filter = function(dfx){
     per.cell = perCellQCMetrics(dfx, 
         subset=list(MCG=grep("AT[MC]G",

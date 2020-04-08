@@ -29,7 +29,7 @@ seurat_allqc_plot = function(data.dir,plot.prefix, plot.suffix){
 }
 
 
-seurat_ba_qcplot = function(data.dir, all_thrs, out.dir, out.prefix, plot.suffix){
+seurat_ba_qcplot = function(data.dir, all_thrs, dirx, out.dir, out.prefix, plot.suffix){
     scr.data = Read10X(data.dir = data.dir)
     scrj = CreateSeuratObject(counts = scr.data, project = data.dir)
     scrj[["percent.mcg"]] = PercentageFeatureSet(scrj, pattern = "^AT[MC]G")
@@ -37,15 +37,16 @@ seurat_ba_qcplot = function(data.dir, all_thrs, out.dir, out.prefix, plot.suffix
     p2 = FeatureScatter(scrj, feature1 = "nCount_RNA", feature2 = "percent.mcg")
     p3 = FeatureScatter(scrj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
     p4 = CombinePlots(plots = list(p2, p3))
-    fname = paste(out.dir, data.dir, paste(out.prefix, "-seurat-before-qc.png", sep=""), 
+    fname = paste(out.dir, dirx, paste(out.prefix, "-seurat-before-qc.png", sep=""), 
 		  sep="/"  )
     ggsave(fname, p4, width=14, height=7)
 
     mcg_threshold = all_thrs[1]
     min_cells = all_thrs[2]
+    min_features = all_thrs[3]
     cat("MCG minc", data.dir, mcg_threshold, min_cells, "\n")
     scrj = CreateSeuratObject(counts = scr.data, project = data.dir,
-			      min.cells = all_thrs, min.features = 200)
+			      min.cells = all_thrs[2], min.features = min_features)
     scrj[["percent.mcg"]] = PercentageFeatureSet(scrj, pattern = "^AT[MC]G")
     #srch =  subset(pbmc, subset = nCount_RNA > 200 & nFeature_RNA < 2500 & percent.mcg < mcg_threshold)
     #scrj =  subset(scrj, subset = nCount_RNA > 200 & percent.mcg < mcg_threshold)
@@ -58,7 +59,7 @@ seurat_ba_qcplot = function(data.dir, all_thrs, out.dir, out.prefix, plot.suffix
     p2 = FeatureScatter(scrj2, feature1 = "nCount_RNA", feature2 = "percent.mcg")
     p3 = FeatureScatter(scrj2, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
     p4 = CombinePlots(plots = list(p2, p3))
-    fname = paste(out.dir, data.dir, paste(out.prefix, "-seuerat-after-qc.png", sep=""), 
+    fname = paste(out.dir, dirx, paste(out.prefix, "-seuerat-after-qc.png", sep=""), 
 		  sep="/"  )
     ggsave(fname, p4, width=14, height=7)
 }
