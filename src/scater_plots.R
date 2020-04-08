@@ -215,7 +215,7 @@ plot_logcounts_hist = function(per.cell, dfx, dirx, fname, print_values=TRUE){
 
 
 
-plot_counts_logavg_hist = function(per.cell, dfx, dirx, fname){
+plot_counts_logavg_hist = function(per.cell, dfx, dirx, fname, print_values=TRUE){
     libmean = per.cell$sum / dim(dfx)[2]
     log_libmean = log10(libmean)
     png(file=fname)
@@ -271,7 +271,7 @@ plot_counts_logavg_hist = function(per.cell, dfx, dirx, fname){
     lmean_3madsp
 }
 
-plot_counts_logavg_hist2 = function(per.cell, lmean_3madsp, dfx, dirx, fname){
+plot_counts_logavg_hist2 = function(per.cell, lmean_3madsp, dfx, dirx, fname) {
     libmean = per.cell$sum / dim(dfx)[2]
     log_libmean = log10(libmean)
     png(file=fname)
@@ -505,4 +505,31 @@ plot_qcstats = function(out_dir, out_prefix, in_dirs){
         all_thrs = plot_hist(per.cell, per.feat, dfx, dirx, out_dir, out_prefix)
         #seurat_ba_qcplot(dirx, all_thrs, out_dir, out_prefix, ".png")
     }
+}
+
+
+plot_cells_hist = function(dfx, dirx, name_prefix,
+                           out_dir, out_prefix){
+    per.cell = perCellQCMetrics(dfx,
+        subset=list(MCG=grep("AT[MC]G",
+                        rownames(dfx))))
+    fname = paste(out_dir, dirx,
+        paste(out_prefix, name_prefix,
+              "-scater-qc-logcounts-hist.png", sep=""),
+        sep="/"  )
+    # print(fname)
+    plot_logcounts_hist(per.cell, dfx, dirx, fname, FALSE)
+
+    fname = paste(out_dir, dirx,
+        paste(out_prefix, name_prefix,
+              "-scater-qc-counts-logavg-hist.png", sep=""),
+        sep="/"  )
+    # print(fname)
+    plot_counts_logavg_hist(per.cell, dfx, dirx, fname, FALSE)
+
+    fname = paste(out_dir, dirx,
+        paste(out_prefix, name_prefix,
+          "-scater-qc-ngenes-hist.png", sep=""),
+        sep="/"  )
+    plot_ngenes(per.cell, dirx, fname, FALSE)
 }
