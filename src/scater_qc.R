@@ -1,132 +1,183 @@
-source("seurat_plots.R")
-source("scater_plots.R")
+library(scater)
+library(DropletUtils)
+library(Seurat)
+library(ggplot2)
 
-qcstat_dir = function(dirx){
-    dfx = read10xCounts(dirx)
+mcg_cell_filter = function(dfx){
     per.cell = perCellQCMetrics(dfx, 
         subset=list(MCG=grep("AT[MC]G",
                         rownames(dfx))))
+    mcgpct = per.cell$subsets_MCG_percent
+    log_mcg = log10(mcgpct)
+    log_mcgf = log_mcg
+    log_mcg = log_mcg[log_mcg > -2.3]
+    mcg_mad = mad(log_mcg)
+    mcg_med = median(log_mcg)
+    mcg_3madsp = mcg_med + 3 * mcg_mad
+    mcg_threshold = min(5, 10^mcg_3madsp)
+    cat(" ", mcg_threshold)
+    (mcgpct > mcg_threshold)
+}
+
+ngenes_cell_filter_lb = function(dfx){
+    per.cell = perCellQCMetrics(dfx, 
+        subset=list(MCG=grep("AT[MC]G",
+                        rownames(dfx))))
+    ngenes = per.cell$detected
+    log_ngenes = log10(ngenes)
+    ngenes_mad = mad(log_ngenes)
+    ngenes_med = median(log_ngenes)
+    ngenes_1mads = ngenes_med -  ngenes_mad
+    cat(" ", 10^ngenes_1mads)
+    (log_ngenes < ngenes_1mads)
+}
+
+ngenes_cell_filter_ub = function(dfx){
+    per.cell = perCellQCMetrics(dfx, 
+        subset=list(MCG=grep("AT[MC]G",
+                        rownames(dfx))))
+    ngenes = per.cell$detected
+    log_ngenes = log10(ngenes)
+    ngenes_mad = mad(log_ngenes)
+    ngenes_med = median(log_ngenes)
+    ngenes_3madsp = ngenes_med + (3*ngenes_mad)
+    cat(" ", 10^ngenes_3madsp)
+    (log_ngenes > ngenes_3madsp)
+}
+
+logcounts_cell_filter = function(dfx){
+    per.cell = perCellQCMetrics(dfx, 
+        subset=list(MCG=grep("AT[MC]G",
+                        rownames(dfx))))
+    libsize = per.cell$sum 
+    log_libsize = log10(libsize)
+    lsize_mad = mad(log_libsize)
+    lsize_med = median(log_libsize)
+    lsize_1mads = lsize_med - lsize_mad
+    cat(" ", 10^lsize_1mads)
+    (log_libsize < lsize_1mads)
+}
+
+
+
+avgcounts_cell_filter = function(dfx){
+    per.cell = perCellQCMetrics(dfx, 
+        subset=list(MCG=grep("AT[MC]G",
+                        rownames(dfx))))
+    libmean = per.cell$sum / dim(dfx)[2]
+    log_libmean = log10(libmean)
+    lmean_mad = mad(log_libmean)
+    lmean_med = median(log_libmean)
+    lmean_1mads = lmean_med - lmean_mad
+    cat(" ", 10^lmean_1mads)
+    (log_libmean < lmean_1mads)
+}
+
+avg_reads_feat_filter = function(dfx){
     per.feat = perFeatureQCMetrics(dfx)
-    tfx = per.feat$detected * dim(dfx)[2]/100.0
-    libsize_mads = isOutlier(per.cell$sum, nmads=3,
-                                type="lower", log=FALSE)
-    genects_mads = isOutlier(per.cell$detected, nmads=3,
-                                type="lower", log=FALSE)
-    feat_cell_cts = per.feat$detected * dim(dfx)[2]/100.0
-    feat_cell_mean = per.feat$mean >= 1.0
+    featavg = per.feat$mean 
+    log_featavg = log10(featavg)
 
-    libsize_95p = per.cell$sum < (quantile(per.cell$sum, .95) * 0.05)
-    genects_99p = per.cell$detected < (quantile(per.cell$detected, 0.99) * 0.05)
+    xhist = hist(log_featavg, breaks=120, xlab=expression(Log[10]~"Avg. No. Reads"), ylab="No. cells", 
+        main=dirx, prob=FALSE, plot=FALSE)
 
-    mcg_nmads = isOutlier(per.cell$subsets_MCG_percent, nmads=3, typ="higher")
-    mcg_5p = per.cell$subsets_MCG_percent > 5
-    mcg_4p = per.cell$subsets_MCG_percent > 4
-    mcg_3p = per.cell$subsets_MCG_percent > 3
-    c(#dirname = dirx,
-      total_cells = dim(dfx)[2],
-      libsize_mads=sum(libsize_mads),
-      genects_mads=sum(genects_mads),
-      libsize_95p=sum(libsize_95p),
-      genects_99p=sum(genects_99p),
-      mcg_nmads=sum(mcg_nmads),
-      mcg_5p=sum(mcg_5p),
-      mcg_4p=sum(mcg_4p),
-      mcg_3p=sum(mcg_3p),
-      total_features = dim(dfx)[1], 
-      feat_cell_mean=sum(feat_cell_mean)
-       )
-
+    xrange = (xhist$mids < -1) & (xhist$mids > -4)  & (xhist$density > 0.05)
+    xrngcts =xhist$counts[xrange]
+    xrngmids = xhist$mids[xrange]
+    xrnmidv = xrngmids[which.min(xrngcts)]
+    (log_featavg > xrnmidv)
 }
 
-get_qcstats = function(outfile, indirs){
-    print(outfile)
-    print(indirs)
-    qcl = lapply(indirs, qcstat_dir)
-    qdf = t(as.data.frame(qcl))
-    rownames(qdf) = indirs
-    write.table(qdf, outfile, sep="\t", quote=FALSE)
+
+plot_cells_hist = function(dfx, dirx, name_prefix,
+                           out_dir, out_prefix){
+    per.cell = perCellQCMetrics(dfx,
+        subset=list(MCG=grep("AT[MC]G",
+                        rownames(dfx))))
+    fname = paste(out_dir, dirx,
+        paste(out_prefix, name_prefix,
+              "-scater-qc-logcounts-hist.png", sep=""),
+        sep="/"  )
+    # print(fname)
+    plot_logcounts_hist(per.cell, dfx, dirx, fname, FALSE)
+
+    fname = paste(out_dir, dirx,
+        paste(out_prefix, name_prefix,
+              "-scater-qc-counts-logavg-hist.png", sep=""),
+        sep="/"  )
+    # print(fname)
+    plot_counts_logavg_hist(per.cell, dfx, dirx, fname, FALSE)
+
+    fname = paste(out_dir, dirx,
+        paste(out_prefix, name_prefix,
+          "-scater-qc-ngenes-hist.png", sep=""),
+        sep="/"  )
+    plot_ngenes(per.cell, dirx, fname, FALSE)
 }
 
-plot_flip_hist = function(per.cell, per.feat, dfx, dirx, out_dir, out_prefix){
-    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-feat-filp-hist.png", sep=""), sep="/"  )
-    plot_feat_counts_flip_hist(per.feat, dfx, dirx, fname)
-    
-    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-counts-flip-hist.png", sep=""), sep="/"  )
-    plot_counts_flip_hist(per.cell, dirx, fname)
-    
-    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-ngenes-flip-hist.png", sep=""), sep="/"  )
-    plot_cell_ngenes_flip_hist(per.cell, dirx, fname)
+apply_filters = function(out_dir, out_prefix, in_base_dir, in_dirs){
 
-    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-mcgpct-flip-hist.png", sep=""), sep="/"  )
-    plot_mcg_flip_hist(per.cell, dirx, fname)
-
-    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-favg-flip-hist.png", sep=""), sep="/"  )
-    plot_feat_avg_flip_hist(per.feat, dirx, fname)
-}
-
-plot_hist = function(per.cell, per.feat, dfx, dirx, out_dir, out_prefix){
-    cat("Dims: ",  dirx, dim(dfx), "\n")
-
-    fname = paste(out_dir, dirx, 
-        paste(out_prefix,
-            "-scater-qc-mcgpct-hist.png", sep=""),
-        sep="/"  )
-    mcg_threshold = plot_mcg_hist(per.cell, dirx, fname)
-
-    fname = paste(out_dir, dirx, 
-        paste(out_prefix, 
-            "-scater-qc-feat-hist.png", sep=""),
-        sep="/"  )
-    feat_cells_threshold = plot_feat_counts_hist(per.feat, dfx, dirx, fname)
-
-    fname = paste(out_dir, dirx,
-        paste(out_prefix, "-scater-qc-feats-avg-hist.png", sep=""),
-        sep="/"  )
-    plot_feat_avg_hist(per.feat, dirx, fname)
-
-    fname = paste(out_dir, dirx,
-        paste(out_prefix, "-scater-qc-counts-avg-hist.png", sep=""),
-        sep="/"  )
-    plot_counts_avg_hist(per.cell, dfx, dirx, fname)
-
-    fname = paste(out_dir, dirx, 
-        paste(out_prefix, "-scater-qc-counts-logavg-hist.png", sep=""),
-        sep="/"  )
-    lmean_3madsp = plot_counts_logavg_hist(per.cell, dfx, dirx, fname)
-
-    fname = paste(out_dir, dirx,
-        paste(out_prefix, "-scater-qc-counts-logavg-hist2.png", sep=""),
-        sep="/"  )
-    plot_counts_logavg_hist2(per.cell, lmean_3madsp, dfx, dirx, fname)
-
-    fname = paste(out_dir, dirx,
-        paste(out_prefix, "-scater-qc-ngenes-hist.png", sep=""),
-        sep="/"  )
-    plot_ngenes(per.cell, dirx, fname)
-
-    c(mcg=mcg_threshold, feature=feat_cells_threshold)
-}
-
-plot_qcstats = function(out_dir, out_prefix, in_dirs){
-    outfile = paste(out_dir, "scater-qc.tsv", sep="/")
-    get_qcstats(outfile, indirs)
-    for(dirx in in_dirs){
+    cat("DIR", "NGENES", "NCELLS",
+        "MCG_UB", "MCG_CELLS", "MCG_PCT",
+        "NGENES_LB", "NGENES_LB_CELLS", "NGENES_LB_PCT",
+        "NGENES_UB", "NGENES_UB_CELLS", "NGENES_UB_PCT",
+        "AVGCTS_LB", "AVGCTS_CELS", "AVGCTS_PCT",
+        # "MCGNG_CELLS", "MCGNG_PCT",
+        # "ALLLB_CELLS", "ALLLB_PCT",
+        "ALL_CELLS", "ALL_PCT",
+        "\n")
+    for(dx in in_dirs){
+        dirx = paste(in_base_dir, dx, sep="/")
         dfx = read10xCounts(dirx)
-        per.cell = perCellQCMetrics(dfx, 
-            subset=list(MCG=grep("AT[MC]G",
-                            rownames(dfx))))
-        per.feat = perFeatureQCMetrics(dfx)
-        #plot_flip_hist(per.cell, per.feat, dfx, dirx, out_dir, out_prefix)
-        all_thrs = plot_hist(per.cell, per.feat, dfx, dirx, out_dir, out_prefix)
-        #seurat_ba_qcplot(dirx, all_thrs, out_dir, out_prefix, ".png")
+        cat(dirx, dim(dfx)[1], dim(dfx)[2])
+        nlength = dim(dfx)[2]
+        # per.feat = perFeatureQCMetrics(dfx)
+
+        plot_cells_hist(dfx, dx, "-before-drop",
+                        out_dir, out_prefix)
+        mcg_drop = mcg_cell_filter(dfx)
+        cat(" ", sum(mcg_drop), sum(mcg_drop)*100/nlength)
+
+        ngenes_lb_drop = ngenes_cell_filter_lb(dfx)
+        cat(" ", sum(ngenes_lb_drop), sum(ngenes_lb_drop)*100/nlength)
+        ngenes_ub_drop = ngenes_cell_filter_ub(dfx)
+        cat(" ", sum(ngenes_ub_drop), sum(ngenes_ub_drop)*100/nlength)
+
+        #avgcts_drop = avgcounts_cell_filter(dfx)
+        #cat(" ", sum(avgcts_drop), sum(avgcts_drop)*100/nlength)
+        #mcg_ngenes_drop = mcg_drop | ngenes_lb_drop | ngenes_ub_drop
+        #all_lb_drop = mcg_drop | ngenes_lb_drop | avgcts_drop
+        #all_drop = mcg_drop | ngenes_lb_drop | ngenes_ub_drop | avgcts_drop
+
+        logcts_drop = logcounts_cell_filter(dfx)
+        cat(" ", sum(logcts_drop), sum(logcts_drop)*100/nlength)
+        mcg_ngenes_drop = mcg_drop | ngenes_lb_drop | ngenes_ub_drop
+        all_lb_drop = mcg_drop | ngenes_lb_drop | logcts_drop
+        all_drop = mcg_drop | ngenes_lb_drop | ngenes_ub_drop | logcts_drop
+
+        # cat(" ",
+        #     sum(mcg_ngenes_drop),
+        #     sum(mcg_ngenes_drop)*100/nlength)
+        # cat(" ",
+        #     sum(all_lb_drop),
+        #     sum(all_lb_drop)*100/nlength)
+        cat(" ",
+            sum(all_drop),
+            sum(all_drop)*100/nlength)
+        dfx2 = dfx[, !mcg_ngenes_drop]
+        plot_cells_hist(dfx2, dx, "-after-mcg-ng-drop",
+                        out_dir, out_prefix)
+        dfx3 = dfx[, !all_lb_drop]
+        plot_cells_hist(dfx3, dx, "-after-all-lb-drop",
+                        out_dir, out_prefix)
+        dfx4 = dfx[, !all_drop]
+        #print(dim(dfx4))
+        dfx4 = dfx4[feat_drip, ]
+        cat(" ", sum(feat_drip),sum(feat_drip)*100/nfeatures,
+            dim(dfx4)[1], dim(dfx4)[2])
+        plot_cells_hist(dfx4, dx, "-after-all-drop-",
+                        out_dir, out_prefix)
+        cat("\n")
     }
 }
 
-args = commandArgs(trailingOnly=TRUE)
-
-if(length(args) >= 3){
-    plot_qcstats(args[1], args[2], args[3:length(args)])
-}  else {
-    print(args)
-    print("Usage: Rscript scater_qcplot.R outdir out_prefix indir1 indir2 ...")
-}
