@@ -86,3 +86,17 @@ avg_reads_feat_filter = function(dfx){
 }
 
 
+apply_cell_filters = function(dfx){
+    mcg_drop = mcg_cell_filter(dfx)
+    ngenes_lb_drop = ngenes_cell_filter_lb(dfx)
+    ngenes_ub_drop = ngenes_cell_filter_ub(dfx)
+    #avgcts_drop = avgcounts_cell_filter(dfx)
+    logcts_drop = logcounts_cell_filter(dfx)
+    all_drop = mcg_drop | ngenes_lb_drop | ngenes_ub_drop | logcts_drop
+    dfx[,!all_drop]
+}
+
+apply_gene_filters = function(dfx){
+    feat_drop = avg_reads_feat_filter(dfx)
+    dfx[!feat_drop, ]
+}

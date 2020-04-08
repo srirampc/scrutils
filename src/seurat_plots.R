@@ -28,18 +28,21 @@ seurat_allqc_plot = function(data.dir,plot.prefix, plot.suffix){
     ggsave(paste(plot.prefix, "/pca", plot.suffix, sep=""), p8)
 }
 
+seurat_fscatter = function(scrj, fname){
+    p2 = FeatureScatter(scrj, feature1 = "nCount_RNA", feature2 = "percent.mcg")
+    p3 = FeatureScatter(scrj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+    p4 = CombinePlots(plots = list(p2, p3))
+    ggsave(fname, p4, width=14, height=7)
+}
 
 seurat_ba_qcplot = function(data.dir, all_thrs, dirx, out.dir, out.prefix, plot.suffix){
     scr.data = Read10X(data.dir = data.dir)
     scrj = CreateSeuratObject(counts = scr.data, project = data.dir)
     scrj[["percent.mcg"]] = PercentageFeatureSet(scrj, pattern = "^AT[MC]G")
-
-    p2 = FeatureScatter(scrj, feature1 = "nCount_RNA", feature2 = "percent.mcg")
-    p3 = FeatureScatter(scrj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
-    p4 = CombinePlots(plots = list(p2, p3))
     fname = paste(out.dir, dirx, paste(out.prefix, "-seurat-before-qc.png", sep=""), 
 		  sep="/"  )
-    ggsave(fname, p4, width=14, height=7)
+    seurat_fscatter(scrj, fname)
+
 
     mcg_threshold = all_thrs[1]
     min_cells = all_thrs[2]
@@ -56,11 +59,8 @@ seurat_ba_qcplot = function(data.dir, all_thrs, dirx, out.dir, out.prefix, plot.
     scrj2 = scrj1[, expr2 < mcg_threshold]
     print(scrj2)
 
-    p2 = FeatureScatter(scrj2, feature1 = "nCount_RNA", feature2 = "percent.mcg")
-    p3 = FeatureScatter(scrj2, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
-    p4 = CombinePlots(plots = list(p2, p3))
     fname = paste(out.dir, dirx, paste(out.prefix, "-seuerat-after-qc.png", sep=""), 
 		  sep="/"  )
-    ggsave(fname, p4, width=14, height=7)
+    seurat_fscatter(scrj2, fname)
 }
 

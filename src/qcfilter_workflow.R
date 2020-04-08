@@ -1,7 +1,8 @@
 source("scater_qc.R")
 source("scater_plots.R")
 
-apply_filters = function(out_dir, out_prefix, in_base_dir, in_dirs){
+
+apply_filters_dirs = function(out_dir, out_prefix, in_base_dir, in_dirs){
 
     cat("DIR", "NGENES", "NCELLS",
         "MCG_UB", "MCG_CELLS", "MCG_PCT",
@@ -24,24 +25,22 @@ apply_filters = function(out_dir, out_prefix, in_base_dir, in_dirs){
 
         plot_cells_hist(dfx, dx, "-before-drop",
                         out_dir, out_prefix)
+
         mcg_drop = mcg_cell_filter(dfx)
-        cat(" ", sum(mcg_drop), sum(mcg_drop)*100/nlength)
-
         ngenes_lb_drop = ngenes_cell_filter_lb(dfx)
-        cat(" ", sum(ngenes_lb_drop), sum(ngenes_lb_drop)*100/nlength)
         ngenes_ub_drop = ngenes_cell_filter_ub(dfx)
-        cat(" ", sum(ngenes_ub_drop), sum(ngenes_ub_drop)*100/nlength)
-
         #avgcts_drop = avgcounts_cell_filter(dfx)
+        logcts_drop = logcounts_cell_filter(dfx)
+
+
+
+        cat(" ", sum(mcg_drop), sum(mcg_drop)*100/nlength)
+        cat(" ", sum(ngenes_lb_drop), sum(ngenes_lb_drop)*100/nlength)
+        cat(" ", sum(ngenes_ub_drop), sum(ngenes_ub_drop)*100/nlength)
+        cat(" ", sum(logcts_drop), sum(logcts_drop)*100/nlength)
         #cat(" ", sum(avgcts_drop), sum(avgcts_drop)*100/nlength)
         #mcg_ngenes_drop = mcg_drop | ngenes_lb_drop | ngenes_ub_drop
         #all_lb_drop = mcg_drop | ngenes_lb_drop | avgcts_drop
-        #all_drop = mcg_drop | ngenes_lb_drop | ngenes_ub_drop | avgcts_drop
-
-        logcts_drop = logcounts_cell_filter(dfx)
-        cat(" ", sum(logcts_drop), sum(logcts_drop)*100/nlength)
-        # mcg_ngenes_drop = mcg_drop | ngenes_lb_drop | ngenes_ub_drop
-        # all_lb_drop = mcg_drop | ngenes_lb_drop | logcts_drop
         all_drop = mcg_drop | ngenes_lb_drop | ngenes_ub_drop | logcts_drop
 
         # cat(" ",
