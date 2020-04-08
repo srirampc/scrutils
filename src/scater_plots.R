@@ -537,7 +537,17 @@ plot_cells_hist = function(dfx, dirx, name_prefix,
 }
 
 filter_venn = function(filter.list, filter.names, fname){
+    #print(fname)
     myCol <- brewer.pal(3, "Pastel2")
+    venn.diagram(
+            x = filter.list,
+            category.names = filter.names,
+            filename = fname,
+            output=TRUE,
+            imagetype="png" )
+}
+
+test = function(){
     # Chart
     venn.diagram(
             x = filter.list,

@@ -72,10 +72,11 @@ apply_filters = function(out_dir, out_prefix, in_base_dir, in_dirs){
         filter_list = list(ncell_list[mcg_drop], 
                 ncell_list[ngenes_ub_drop|ngenes_lb_drop],
                 ncell_list[logcts_drop])
-        filt_names = c("MCG", "Genes filter", "Counts filter")
+        filter_names = c("MCG", "Genes filter", "Counts filter")
         venn_fname = paste(out_dir, dx,
-           paste(out_prefix, "filter-venn.png", sep=""),
+           paste(out_prefix, "-filter-venn.png", sep=""),
         sep="/"  )
+        filter_venn(filter_list, filter_names, venn_fname)
 
         cat("\n")
     }
