@@ -11,6 +11,8 @@ apply_filters = function(out_dir, out_prefix, in_base_dir, in_dirs){
         # "MCGNG_CELLS", "MCGNG_PCT",
         # "ALLLB_CELLS", "ALLLB_PCT",
         "ALL_CELLS", "ALL_PCT",
+        "FEAT_FILT", "FEAT_PCT",
+        "NGENES_FINAL", "NCELLS_FINAL",
         "\n")
     for(dx in in_dirs){
         dirx = paste(in_base_dir, dx, sep="/")
@@ -38,8 +40,8 @@ apply_filters = function(out_dir, out_prefix, in_base_dir, in_dirs){
 
         logcts_drop = logcounts_cell_filter(dfx)
         cat(" ", sum(logcts_drop), sum(logcts_drop)*100/nlength)
-        mcg_ngenes_drop = mcg_drop | ngenes_lb_drop | ngenes_ub_drop
-        all_lb_drop = mcg_drop | ngenes_lb_drop | logcts_drop
+        # mcg_ngenes_drop = mcg_drop | ngenes_lb_drop | ngenes_ub_drop
+        # all_lb_drop = mcg_drop | ngenes_lb_drop | logcts_drop
         all_drop = mcg_drop | ngenes_lb_drop | ngenes_ub_drop | logcts_drop
 
         # cat(" ",
@@ -51,20 +53,30 @@ apply_filters = function(out_dir, out_prefix, in_base_dir, in_dirs){
         cat(" ",
             sum(all_drop),
             sum(all_drop)*100/nlength)
-        dfx2 = dfx[, !mcg_ngenes_drop]
-        plot_cells_hist(dfx2, dx, "-after-mcg-ng-drop",
-                        out_dir, out_prefix)
-        dfx3 = dfx[, !all_lb_drop]
-        plot_cells_hist(dfx3, dx, "-after-all-lb-drop",
-                        out_dir, out_prefix)
+        # dfx2 = dfx[, !mcg_ngenes_drop]
+        # plot_cells_hist(dfx2, dx, "-after-mcg-ng-drop",
+        #                 out_dir, out_prefix)
+        # dfx3 = dfx[, !all_lb_drop]
+        # plot_cells_hist(dfx3, dx, "-after-all-lb-drop",
+        #                 out_dir, out_prefix)
         dfx4 = dfx[, !all_drop]
         #print(dim(dfx4))
         feat_drop = avg_reads_feat_filter(dfx)
         dfx4 = dfx4[!feat_drop, ]
-        cat(" ", sum(feat_drop),sum(feat_drop)*100/nfeatures,
-            dim(dfx4)[1], dim(dfx4)[2])
         plot_cells_hist(dfx4, dx, "-after-all-drop-",
                         out_dir, out_prefix)
+
+        cat(" ", sum(feat_drop),sum(feat_drop)*100/nfeatures,
+            dim(dfx4)[1], dim(dfx4)[2])
+        ncell_list = 1:nlength
+        filter_list = list(ncell_list[mcg_drop], 
+                ncell_list[ngenes_ub_drop|ngenes_lb_drop],
+                ncell_list[logcts_drop])
+        filt_names = c("MCG", "Genes filter", "Counts filter")
+        venn_fname = paste(out_dir, dx,
+           paste(out_prefix, "filter-venn.png", sep=""),
+        sep="/"  )
+
         cat("\n")
     }
 }

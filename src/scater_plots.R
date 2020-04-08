@@ -1,5 +1,7 @@
 library(scater)
 library("DropletUtils")
+library(RColorBrewer)
+library(VennDiagram)
 
 qcstat_dir = function(dirx){
     dfx = read10xCounts(dirx)
@@ -532,4 +534,41 @@ plot_cells_hist = function(dfx, dirx, name_prefix,
           "-scater-qc-ngenes-hist.png", sep=""),
         sep="/"  )
     plot_ngenes(per.cell, dirx, fname, FALSE)
+}
+
+filter_venn = function(filter.list, filter.names, fname){
+    myCol <- brewer.pal(3, "Pastel2")
+    # Chart
+    venn.diagram(
+            x = filter.list,
+            category.names = filter.names,
+            filename = fname,
+            output=TRUE,
+            
+            # Output features
+            imagetype="png" ,
+            height = 480 , 
+            width = 480 , 
+            resolution = 300,
+            compression = "lzw",
+            
+            # Circles
+            lwd = 2,
+            lty = 'blank',
+            fill = myCol,
+            
+            # Numbers
+            cex = .6,
+            fontface = "bold",
+            fontfamily = "sans",
+            
+            # Set names
+            cat.cex = 0.6,
+            cat.fontface = "bold",
+            cat.default.pos = "outer",
+            cat.pos = c(-27, 27, 135),
+            cat.dist = c(0.055, 0.055, 0.085),
+            cat.fontfamily = "sans",
+            rotation = 1
+    )
 }
