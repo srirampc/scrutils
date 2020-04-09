@@ -2,7 +2,8 @@ source("scater_qc.R")
 source("scater_plots.R")
 
 
-apply_filter_dirs = function(out_dir, out_prefix, in_base_dir, in_dirs){
+apply_filter_dirs = function(out_dir, out_prefix, glist_file,
+                             in_base_dir, in_dirs){
 
     cat("DIR", "NGENES", "NCELLS",
         "MCG_UB", "MCG_CELLS", "MCG_PCT",
@@ -13,8 +14,10 @@ apply_filter_dirs = function(out_dir, out_prefix, in_base_dir, in_dirs){
         # "ALLLB_CELLS", "ALLLB_PCT",
         "ALL_CELLS", "ALL_PCT",
         "FEAT_FILT", "FEAT_PCT",
+        "CODING_FILT", "CODING_PCT",
         "NGENES_FINAL", "NCELLS_FINAL",
         "\n")
+    gdf = read.table(glist_file, header=TRUE)
     for(dx in in_dirs){
         dirx = paste(in_base_dir, dx, sep="/")
         dfx = read10xCounts(dirx)
@@ -56,8 +59,10 @@ apply_filter_dirs = function(out_dir, out_prefix, in_base_dir, in_dirs){
         feat_drop = avg_reads_feat_filter(dfx)
         dfx4 = dfx4[!feat_drop, ]
         plot_cells_hist(dfx4, dx, "-after-all-drop-", out_dir, out_prefix)
+        coding_drop = !(rownames(dfx4) %in% gdf$gene)
 
         cat(" ", sum(feat_drop), sum(feat_drop)*100/nfeatures)
+        cat(" ", sum(coding_drop), sum(coding_drop)*100/nfeatures)
         cat(" ", dim(dfx4)[1], dim(dfx4)[2])
         ncell_list = 1:nlength
         filter_list = list(
@@ -79,8 +84,8 @@ apply_filter_dirs = function(out_dir, out_prefix, in_base_dir, in_dirs){
 args = commandArgs(trailingOnly=TRUE)
 
 if(length(args) >= 4){
-    apply_filter_dirs(args[1], args[2], args[3], args[4:length(args)])
+    apply_filter_dirs(args[1], args[2], args[3], args[4], args[5:length(args)])
 }  else {
     print(args)
-    print("Usage: Rscript qcfilter_workflow.R outdir out_prefix in_base_dir indir1 indir2 ...")
+    print("Usage: Rscript qcfilter_workflow.R outdir out_prefix gene_list in_base_dir indir1 indir2 ...")
 }
