@@ -17,24 +17,30 @@ variance_plot = function(dfx, fname){
     plot(dec$mean, dec$total, xlab="Mean log-expression", ylab="Variance")
     curve(metadata(dec)$trend(x), col="blue", add=TRUE)
     dev.off()
-
 }
 
 scran_normalize_dir = function(out_dir, out_prefix, in_base_dir, dirx){
-    dirx = paste(in_base_dir, dx, sep="/")
-    dfx = read10xCounts(dirx)
+    rdx = paste(in_base_dir, dirx, sep="/")
+    dfx = read10xCounts(rdx)
+    dfx2 <- logNormCounts(dfx)
+    print(dim(dfx2))
     fname = paste(out_dir, dirx, 
         paste(out_prefix, "-variance-before.png", sep=""),
         sep="/"  )
-    variance_plot(dfx, fname)
+    variance_plot(dfx2, fname)
     fname = paste(out_dir, dirx,
         paste(out_prefix, "-seurat-scatter-before.png", sep=""),
     sep="/"  )
-    scrj = CreateSeuratObject(counts = dfx, project = data.dir)
+    ctmtx = counts(dfx2)
+    print(dim(ctmtx))
+    rownames(ctmtx) = rownames(dfx2)
+    colnames(ctmtx) = 1:dim(dfx2)[2]
+    scrj = CreateSeuratObject(counts = ctmtx, project = dirx)
     seurat_fscatter(scrj, fname)
 
     dfx = apply_cell_filters(dfx)
     dfx = apply_gene_filters(dfx)
+    print(dfx)
     dfx = scran_normalize(dfx)
 
     fname = paste(out_dir, dirx,
@@ -44,8 +50,11 @@ scran_normalize_dir = function(out_dir, out_prefix, in_base_dir, dirx){
     fname = paste(out_dir, dirx,
         paste(out_prefix, "-seurat-scatter-after.png", sep=""),
     sep="/"  )
-    dev.off()
-    scrj = CreateSeuratObject(counts = dfx, project = data.dir)
+    ctmtx = counts(dfx)
+    print(dim(ctmtx))
+    rownames(ctmtx) = rownames(dfx)
+    colnames(ctmtx) = 1:dim(dfx)[2]
+    scrj = CreateSeuratObject(counts = ctmtx, project = dirx)
     seurat_fscatter(scrj, fname)
 }
 
@@ -53,7 +62,7 @@ args = commandArgs(trailingOnly=TRUE)
 
 if(length(args) >= 4){
     for(dirx in args[4:length(args)]){
-        normalize_dir(args[1], args[2], args[3], dirx)
+        scran_normalize_dir(args[1], args[2], args[3], dirx)
     }
 }  else {
     print(args)

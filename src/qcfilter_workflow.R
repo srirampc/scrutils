@@ -2,7 +2,7 @@ source("scater_qc.R")
 source("scater_plots.R")
 
 
-apply_filters_dirs = function(out_dir, out_prefix, in_base_dir, in_dirs){
+apply_filter_dirs = function(out_dir, out_prefix, in_base_dir, in_dirs){
 
     cat("DIR", "NGENES", "NCELLS",
         "MCG_UB", "MCG_CELLS", "MCG_PCT",
@@ -21,7 +21,6 @@ apply_filters_dirs = function(out_dir, out_prefix, in_base_dir, in_dirs){
         cat(dirx, dim(dfx)[1], dim(dfx)[2])
         nlength = dim(dfx)[2]
         nfeatures = dim(dfx)[1]
-        # per.feat = perFeatureQCMetrics(dfx)
 
         plot_cells_hist(dfx, dx, "-before-drop",
                         out_dir, out_prefix)
@@ -33,45 +32,39 @@ apply_filters_dirs = function(out_dir, out_prefix, in_base_dir, in_dirs){
         logcts_drop = logcounts_cell_filter(dfx)
 
 
-
-        cat(" ", sum(mcg_drop), sum(mcg_drop)*100/nlength)
-        cat(" ", sum(ngenes_lb_drop), sum(ngenes_lb_drop)*100/nlength)
-        cat(" ", sum(ngenes_ub_drop), sum(ngenes_ub_drop)*100/nlength)
-        cat(" ", sum(logcts_drop), sum(logcts_drop)*100/nlength)
-        #cat(" ", sum(avgcts_drop), sum(avgcts_drop)*100/nlength)
         #mcg_ngenes_drop = mcg_drop | ngenes_lb_drop | ngenes_ub_drop
         #all_lb_drop = mcg_drop | ngenes_lb_drop | avgcts_drop
         all_drop = mcg_drop | ngenes_lb_drop | ngenes_ub_drop | logcts_drop
+        
+        cat(" ", sum(mcg_drop), sum(mcg_drop)*100/nlength)
+        cat(" ", sum(ngenes_lb_drop), sum(ngenes_lb_drop)*100/nlength)
+        cat(" ", sum(ngenes_ub_drop), sum(ngenes_ub_drop)*100/nlength)
+        #cat(" ", sum(avgcts_drop), sum(avgcts_drop)*100/nlength)
+        cat(" ", sum(logcts_drop), sum(logcts_drop)*100/nlength)
 
-        # cat(" ",
-        #     sum(mcg_ngenes_drop),
-        #     sum(mcg_ngenes_drop)*100/nlength)
-        # cat(" ",
-        #     sum(all_lb_drop),
-        #     sum(all_lb_drop)*100/nlength)
-        cat(" ",
-            sum(all_drop),
-            sum(all_drop)*100/nlength)
+        # cat(" ", sum(mcg_ngenes_drop), sum(mcg_ngenes_drop)*100/nlength)
         # dfx2 = dfx[, !mcg_ngenes_drop]
-        # plot_cells_hist(dfx2, dx, "-after-mcg-ng-drop",
-        #                 out_dir, out_prefix)
+        # plot_cells_hist(dfx2, dx, "-after-mcg-ng-drop", out_dir, out_prefix)
+        # cat(" ", sum(all_lb_drop), sum(all_lb_drop)*100/nlength)
         # dfx3 = dfx[, !all_lb_drop]
-        # plot_cells_hist(dfx3, dx, "-after-all-lb-drop",
-        #                 out_dir, out_prefix)
+        # plot_cells_hist(dfx3, dx, "-after-all-lb-drop",  out_dir, out_prefix)
+
+        cat(" ", sum(all_drop), sum(all_drop)*100/nlength)
         dfx4 = dfx[, !all_drop]
         #print(dim(dfx4))
+
         feat_drop = avg_reads_feat_filter(dfx)
         dfx4 = dfx4[!feat_drop, ]
-        plot_cells_hist(dfx4, dx, "-after-all-drop-",
-                        out_dir, out_prefix)
+        plot_cells_hist(dfx4, dx, "-after-all-drop-", out_dir, out_prefix)
 
-        cat(" ", sum(feat_drop),sum(feat_drop)*100/nfeatures,
-            dim(dfx4)[1], dim(dfx4)[2])
+        cat(" ", sum(feat_drop), sum(feat_drop)*100/nfeatures)
+        cat(" ", dim(dfx4)[1], dim(dfx4)[2])
         ncell_list = 1:nlength
-        filter_list = list(ncell_list[mcg_drop], 
-                ncell_list[ngenes_ub_drop|ngenes_lb_drop],
-                ncell_list[logcts_drop])
-        filter_names = c("MCG", "Genes filter", "Counts filter")
+        filter_list = list(
+           ncell_list[mcg_drop], 
+           ncell_list[ngenes_ub_drop|ngenes_lb_drop],
+           ncell_list[logcts_drop])
+        filter_names = c("MCG filter", "Genes filter", "Counts filter")
         venn_fname = paste(out_dir, dx,
            paste(out_prefix, "-filter-venn.png", sep=""),
         sep="/"  )
@@ -86,7 +79,7 @@ apply_filters_dirs = function(out_dir, out_prefix, in_base_dir, in_dirs){
 args = commandArgs(trailingOnly=TRUE)
 
 if(length(args) >= 4){
-    apply_filters(args[1], args[2], args[3], args[4:length(args)])
+    apply_filter_dirs(args[1], args[2], args[3], args[4:length(args)])
 }  else {
     print(args)
     print("Usage: Rscript qcfilter_workflow.R outdir out_prefix in_base_dir indir1 indir2 ...")

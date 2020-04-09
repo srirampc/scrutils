@@ -29,6 +29,7 @@ seurat_allqc_plot = function(data.dir,plot.prefix, plot.suffix){
 }
 
 seurat_fscatter = function(scrj, fname){
+    scrj[["percent.mcg"]] = PercentageFeatureSet(scrj, pattern = "^AT[MC]G")
     p2 = FeatureScatter(scrj, feature1 = "nCount_RNA", feature2 = "percent.mcg")
     p3 = FeatureScatter(scrj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
     p4 = CombinePlots(plots = list(p2, p3))
