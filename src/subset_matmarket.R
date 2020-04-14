@@ -7,9 +7,12 @@ gen_subset= function(matrix_file, cols_file, rows_file, filter_col_file, output_
     rownames(mdf) = rxdf$V1
     colnames(mdf) = cxdf$V1
     fndf = read.table(filter_col_file, stringsAsFactors=F, header=F)
-
-    fxdf = mdf[,  colnames(mdf) %in% fndf$V1]
-    write.csv(fxdf, output_file)
+    if(dim(fndf)[1] > 0) {
+       fxdf = mdf[,  colnames(mdf) %in% fndf$V1]
+       write.csv(fxdf, output_file)
+    } else {
+       print("Failed to complete")
+    }
 }
 
 args = commandArgs(trailingOnly=TRUE)
