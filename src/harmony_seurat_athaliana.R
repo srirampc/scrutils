@@ -2,6 +2,7 @@ library(Seurat)
 library(cowplot)
 library(ggplot2)
 library(harmony)
+source("data_utils.R")
 
 root.dir = "/data/scRNAseq/athaliana/"
 root.dir = "/nv/hswarm1/schockalingam6/data2/scRNAseq/data/"
@@ -23,7 +24,7 @@ project.names = c(
 )
 
 
-plot.names = c(
+short.names = c(
 "CRD5",
 "GEO3",
 "GEO6",
@@ -31,74 +32,46 @@ plot.names = c(
 "NAD3"
 )
 
-load_matrices = function(base.dir, dir.paths, data.names) {
-
-    athaliana.list = lapply(1:length(dir.paths),
-        function(i){
-            mtx = Read10X(paste(base.dir, dir.paths[i], sep=""))
-            mtx
-    })
-    names(athaliana.list) = data.names
-    print(sapply(athaliana.list, dim))
-
-    common.gene.names = rownames(athaliana.list[[1]])
-    for(i in 2:length(athaliana.list)){
-    common.gene.names = intersect(common.gene.names,
-                rownames(athaliana.list[[i]]))
-    }
-
-    for(i in 1:length(athaliana.list)){
-        athaliana.list[[i]] = athaliana.list[[i]][common.gene.names,]
-    }
-    print(sapply(athaliana.list, dim))
-    athaliana.list
+dim_plot = function(sobj, reduce_by, group = "stim"){
+    DimPlot(object = sobj, reduction = reduce_by, pt.size = .1, group.by = group)
+}
+violin_plot = function(sobj, feats, group) {
+    VlnPlot(object = sobj, features = feats, group.by = group, pt.size = .1)
 }
 
-athaliana.mlist = load_matrices(root.dir, control.dir.paths,
-                            project.names)
-#ctx =  cbind(stim.sparse, ctrl.sparse)
-athaliana.combmat = do.call("cbind", athaliana.mlist)
-athaliana = CreateSeuratObject(counts = athaliana.combmat, project = "ATHSC", min.cells = 5)
-athaliana = athaliana %>% Seurat::NormalizeData(verbose = FALSE)
-athaliana = athaliana %>% FindVariableFeatures(selection.method = "vst", nfeatures = 2000)
-athaliana = athaliana %>% ScaleData(verbose = FALSE) 
-#
-athaliana = athaliana %>% RunPCA(pc.genes = athaliana@var.genes, npcs = 20, verbose = FALSE)
-#
-#
-athaliana.stim = lapply(1:length(athaliana.mlist), 
-			function(i){
-				c(rep(plot.names[i], ncol(athaliana.mlist[[i]])))
-			})
-astim = do.call("c", athaliana.stim)
-athaliana@meta.data$stim <- astim
-#
-options(repr.plot.height = 5, repr.plot.width = 12)
-p1 <- DimPlot(object = athaliana, reduction = "pca", pt.size = .1, group.by = "stim") #, do.return = TRUE)
-p2 <- VlnPlot(object = athaliana, features = "PC_1", group.by = "stim", pt.size = .1) #, do.return = TRUE)
-p3 = plot_grid(p1,p2)
-ggsave("p3-sath1.pdf", p3, width=12, height=5)
-#
-#
-athaliana <- athaliana %>% RunHarmony("stim")
-harmony_embeddings <- Embeddings(athaliana, 'harmony')
-#
-options(repr.plot.height = 5, repr.plot.width = 12)
-p1 <- DimPlot(object = athaliana, reduction = "harmony", pt.size = .1, group.by = "stim") #, do.return = TRUE)
-p2 <- VlnPlot(object = athaliana, features = "harmony_1", group.by = "stim", pt.size=.1) #do.return = TRUE, pt.size = .1)
-p3 = plot_grid(p1,p2)
-#
-ggsave("p3-sath2.pdf", p3, width=12, height=5)
-#
-athaliana <- athaliana %>% RunUMAP(reduction = "harmony", dims = 1:20)
-athaliana = athaliana %>% FindNeighbors(reduction = "harmony", dims = 1:20)
-athaliana = athaliana %>% FindClusters(resolution = 0.5)
-athaliana = athaliana %>% identity()
-#
-options(repr.plot.height = 4, repr.plot.width = 10)
-p3 = DimPlot(athaliana, reduction = "umap", group.by = "stim", pt.size = .1, split.by = 'stim')
-ggsave("p3-aths3.pdf", p3, width=10, height=4)
-#
-options(repr.plot.height = 4, repr.plot.width = 6)
-p3 = DimPlot(athaliana, reduction = "umap", label = TRUE, pt.size = .1)
-ggsave("p3-aths4.pdf", p3, width=6, height=4)
+dim_violin_plot = function(sobj, reduce_by, feats, group, out_file = NULL){
+    options(repr.plot.height = 5, repr.plot.width = 12)
+    p1 = dim_plot(sobj, reduce_by, group)
+    p2 = violin_plot(sobj, feats, group)
+    p3 = plot_grid(p1, p2)
+    if(is.null(out_file)){
+        ggsave(out_file, p2, width=12, height=5)
+    }
+    p2
+}
+
+harmony_cluster = function(){
+    athaliana.mlist = load_10X_matrices(root.dir, control.dir.paths,
+                                        project.names)
+
+    athaliana = combined_seurat_object(athaliana.mlist, short.names)
+
+    dim_violin_plot(athaliana "pca", "PC_1", "stim", "p3-sath1.png")
+    ath.list = integrate_data_harmony(athaliana)
+    athaliana = ath.list[[1]]
+    harmony_embeddings = ath.list[[2]]
+    #
+    cluster_umap_seurat(athaliana, "harmony", 0.5, 1:20)
+    dim_violin_plot(athaliana, "harmony", "harmony_1", "stim", "p3-sath2.png")
+
+    #
+    options(repr.plot.height = 4, repr.plot.width = 10)
+    p3 = DimPlot(athaliana, reduction = "umap", group.by = "stim", pt.size = .1, split.by = 'stim')
+    ggsave("p3-aths3.png", p3, width=10, height=4)
+    #
+    options(repr.plot.height = 4, repr.plot.width = 6)
+    p3 = DimPlot(athaliana, reduction = "umap", label = TRUE, pt.size = .1)
+    ggsave("p3-aths4.png", p3, width=6, height=4)
+}
+
+harmony_cluster()

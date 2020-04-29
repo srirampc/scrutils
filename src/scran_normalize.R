@@ -1,8 +1,8 @@
 
 library(scran)
 library("DropletUtils")
-source("scater_qc.R")
-source("seurat_plots.R")
+source("scater_qc_utils.R")
+source("seurat_plot_utils.R")
 
 scran_normalize = function(dfx){
     clusters <- quickCluster(dfx)
@@ -19,43 +19,48 @@ variance_plot = function(dfx, fname){
     dev.off()
 }
 
-scran_normalize_dir = function(out_dir, out_prefix, in_base_dir, dirx){
+
+scran_normalize_dir = function(out_dir, out_prefix, in_base_dir, dirx, plot=FALSE){
     rdx = paste(in_base_dir, dirx, sep="/")
     dfx = read10xCounts(rdx)
-    dfx2 <- logNormCounts(dfx)
-    print(dim(dfx2))
-    fname = paste(out_dir, dirx, 
-        paste(out_prefix, "-variance-before.png", sep=""),
+    if(plot == TRUE){
+        dfx2 = logNormCounts(dfx)
+        print(dim(dfx2))
+        fname = paste(out_dir, dirx, 
+            paste(out_prefix, "-variance-before.png", sep=""),
+            sep="/"  )
+        variance_plot(dfx2, fname)
+        fname = paste(out_dir, dirx,
+            paste(out_prefix, "-seurat-scatter-before.png", sep=""),
         sep="/"  )
-    variance_plot(dfx2, fname)
-    fname = paste(out_dir, dirx,
-        paste(out_prefix, "-seurat-scatter-before.png", sep=""),
-    sep="/"  )
-    ctmtx = counts(dfx2)
-    print(dim(ctmtx))
-    rownames(ctmtx) = rownames(dfx2)
-    colnames(ctmtx) = 1:dim(dfx2)[2]
-    scrj = CreateSeuratObject(counts = ctmtx, project = dirx)
-    seurat_fscatter(scrj, fname)
+        ctmtx = counts(dfx2)
+        print(dim(ctmtx))
+        rownames(ctmtx) = rownames(dfx2)
+        colnames(ctmtx) = 1:dim(dfx2)[2]
+        scrj = CreateSeuratObject(counts = ctmtx, project = dirx)
+        seurat_fscatter(scrj, fname)
+    }
 
     dfx = apply_cell_filters(dfx)
     dfx = apply_gene_filters(dfx)
     print(dfx)
     dfx = scran_normalize(dfx)
 
-    fname = paste(out_dir, dirx,
-        paste(out_prefix, "-variance-after.png", sep=""),
-    sep="/"  )
-    variance_plot(dfx, fname)
-    fname = paste(out_dir, dirx,
-        paste(out_prefix, "-seurat-scatter-after.png", sep=""),
-    sep="/"  )
-    ctmtx = counts(dfx)
-    print(dim(ctmtx))
-    rownames(ctmtx) = rownames(dfx)
-    colnames(ctmtx) = 1:dim(dfx)[2]
-    scrj = CreateSeuratObject(counts = ctmtx, project = dirx)
-    seurat_fscatter(scrj, fname)
+    if(plot == TRUE){
+        fname = paste(out_dir, dirx,
+            paste(out_prefix, "-variance-after.png", sep=""),
+        sep="/"  )
+        variance_plot(dfx, fname)
+        fname = paste(out_dir, dirx,
+            paste(out_prefix, "-seurat-scatter-after.png", sep=""),
+        sep="/"  )
+        ctmtx = counts(dfx)
+        print(dim(ctmtx))
+        rownames(ctmtx) = rownames(dfx)
+        colnames(ctmtx) = 1:dim(dfx)[2]
+        scrj = CreateSeuratObject(counts = ctmtx, project = dirx)
+        seurat_fscatter(scrj, fname)
+    }
 }
 
 args = commandArgs(trailingOnly=TRUE)
