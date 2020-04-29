@@ -1,14 +1,13 @@
-library(dplyr)
-library(ggplot2)
-library(harmony)
-library(cowplot)
-library(Seurat)
 
 do_scatter <- function(umap_use, meta_data, label_name, no_guides = TRUE,
                        do_labels = TRUE, nice_names,
                        palette_use = c(`jurkat` = '#810F7C', `t293` = '#D09E2D',`half` = '#006D2C'),
                        pt_size = 4, point_size = .5, base_size = 12,
                        do_points = TRUE, do_density = FALSE, h = 6, w = 8) {
+    library(dplyr)
+    library(ggplot2)
+    library(harmony)
+    library(cowplot)
     umap_use <- umap_use[, 1:2]
     colnames(umap_use) <- c('X1', 'X2')
     plt_df <- umap_use %>% data.frame() %>%
@@ -62,6 +61,10 @@ do_scatter <- function(umap_use, meta_data, label_name, no_guides = TRUE,
 }
 
 harmony_cell_lines = function(){
+    library(dplyr)
+    library(ggplot2)
+    library(harmony)
+    library(cowplot)
     out_dir = "./"
     data(cell_lines)
     V <- cell_lines$scaled_pcs
@@ -86,6 +89,11 @@ harmony_cell_lines = function(){
 }
 
 harmony_pbmc = function(){
+    library(dplyr)
+    library(ggplot2)
+    library(harmony)
+    library(cowplot)
+    library(Seurat)
     pbmc_rdata = 'hdata/pbmc_stim.RData'
     plot_outdir = "."
     load(pbmc_rdata)
@@ -129,6 +137,27 @@ harmony_pbmc = function(){
     options(repr.plot.height = 4, repr.plot.width = 6)
     p3 = DimPlot(pbmc, reduction = "umap", label = TRUE, pt.size = .1)
     ggsave(paste(plot_outdir, "p3-s4.pdf", sep=""), p3)
+
+}
+
+seurat_expts = function(){
+        library(Seurat)
+    library(SeuratData)
+
+    InstallData("panc8")
+    data(panc8)
+
+    pancreas.list <- SplitObject(panc8, split.by = "tech")
+    pancreas.list <- pancreas.list[c("celseq", "celseq2", "fluidigmc1", "smartseq2")]
+
+    for (i in 1:length(pancreas.list)) {
+        pancreas.list[[i]] <- NormalizeData(pancreas.list[[i]], verbose = FALSE)
+        pancreas.list[[i]] <- FindVariableFeatures(pancreas.list[[i]], selection.method = "vst", 
+            nfeatures = 2000, verbose = FALSE)
+    }
+
+    reference.list <- pancreas.list[c("celseq", "celseq2", "smartseq2")]
+    pancreas.anchors <- FindIntegrationAnchors(object.list = reference.list, dims = 1:30)
 
 }
 
