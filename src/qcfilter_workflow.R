@@ -17,7 +17,7 @@ apply_filter_dirs = function(out_dir, out_prefix, glist_file,
         "CODING_FILT", "CODING_PCT",
         "NGENES_FINAL", "NCELLS_FINAL",
         "\n")
-    gdf = read.table(glist_file, header=TRUE)
+    gdf = read.table(glist_file, header=TRUE, stringsAsFactors=FALSE)
     for(dx in in_dirs){
         dirx = paste(in_base_dir, dx, sep="/")
         dfx = read10xCounts(dirx)
@@ -59,9 +59,13 @@ apply_filter_dirs = function(out_dir, out_prefix, glist_file,
         feat_drop = avg_reads_feat_filter(dfx)
         dfx4 = dfx4[!feat_drop, ]
         plot_cells_hist(dfx4, dx, "-after-all-drop-", out_dir, out_prefix)
-        coding_drop = !(rownames(dfx4) %in% gdf$gene)
 
         cat(" ", sum(feat_drop), sum(feat_drop)*100/nfeatures)
+        gnames = as.character(rownames(dfx4))
+        #print(gnames[1:4])
+        #print(gdf$name[1:4])
+        coding_drop = !(gnames %in% gdf$name)
+        dfx4 = dfx4[!coding_drop, ]
         cat(" ", sum(coding_drop), sum(coding_drop)*100/nfeatures)
         cat(" ", dim(dfx4)[1], dim(dfx4)[2])
         ncell_list = 1:nlength
