@@ -84,6 +84,6 @@ if(length(args) >= 2){
     harmony_cluster(args[1], args[2])
 }  else {
     print(args)
-    print("Usage: Rscript qcfilter_workflow.R root_dir data.file.csv")
+    print("Usage: Rscript harmony_cluster.R root_dir data.file.csv")
 }
 
