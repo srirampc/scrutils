@@ -1,5 +1,6 @@
+
+library("Seurat")
 load_10X_matrices = function(base.dir, dir.paths, data.names) {
-    library("Seurat")
     mat10x.list = lapply(1:length(dir.paths),
         function(i){
             mtx = Read10X(paste(base.dir, dir.paths[i], sep=""))
@@ -22,7 +23,6 @@ load_10X_matrices = function(base.dir, dir.paths, data.names) {
 }
 
 load_10X_seurat_objects = function(base.dir, dir.paths, data.names) {
-    library("Seurat")
     mat10x.list = load_10X_matrices(base.dir, dir.paths, data.names)
 
     mat10X.sobjects = lapply(1:length(mat10x.list),
@@ -50,27 +50,26 @@ integrate_seurat_objects = function(athaliana.sobj, ndims = 1:30){
 
 
 combined_seurat_object = function(data.mlist, short.names) {
-    library(Seurat)
     data.combmat = do.call("cbind", data.mlist)
     data.sobj = CreateSeuratObject(counts = data.combmat, project = "ATHSC", min.cells = 5)
     data.sobj = data.sobj %>% Seurat::NormalizeData(verbose = FALSE)
     data.sobj = data.sobj %>% FindVariableFeatures(selection.method = "vst", nfeatures = 2000)
     data.sobj = data.sobj %>% ScaleData(verbose = FALSE) 
     #
-    data.sobj = athaliana %>% RunPCA(pc.genes = athaliana@var.genes, npcs = 20, verbose = FALSE)
+    data.sobj = data.sobj %>% RunPCA(pc.genes = (data.sobj)@var.genes, npcs = 20, verbose = FALSE)
     data.cnames = lapply(1:length(data.mlist), 
                 function(i){
                     c(rep(short.names[i], ncol(data.mlist[[i]])))
                 })
     data.cnames = do.call("c", data.cnames)
-    combo.sobj@meta.data$stim <- data.cnames
+    data.sobj@meta.data$stim <- data.cnames
     data.sobj
 }
 
 integrate_data_harmony = function(combo.sobj){
     library(harmony)
-    combo.sobj <- comb.sobj %>% RunHarmony("stim")
-    harmony_embeddings <- Embeddings(comb.sobj, 'harmony')
+    combo.sobj <- combo.sobj %>% RunHarmony("stim")
+    harmony_embeddings <- Embeddings(combo.sobj, 'harmony')
     list(comb.sobj, harmony_embeddings)
 } 
 

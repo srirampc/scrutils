@@ -51,16 +51,18 @@ dim_violin_plot = function(sobj, reduce_by, feats, group, out_file = NULL){
 }
 
 harmony_cluster = function(root.dir, data.file){
-    data.df = read.csv(data.file, header=TRUE)
-    expt.dir.paths = data.df$dir.paths
-    short.names = data.df$short.names
-    project.names = data.df$project.names
+    data.df = read.csv(data.file, header=TRUE, stringsAsFactors=FALSE)
+    print(head(data.df))
+    expt.dir.paths = data.df[,'dir.paths']
+    short.names = data.df[,'short.names']
+    project.names = data.df[, 'project.names']
+    print(expt.dir.paths)
     athaliana.mlist = load_10X_matrices(root.dir, expt.dir.paths,
                                         project.names)
 
     athaliana = combined_seurat_object(athaliana.mlist, short.names)
 
-    dim_violin_plot(athaliana "pca", "PC_1", "stim", "p3-sath1.png")
+    dim_violin_plot(athaliana, "pca", "PC_1", "stim", "p3-sath1.png")
     ath.list = integrate_data_harmony(athaliana)
     athaliana = ath.list[[1]]
     harmony_embeddings = ath.list[[2]]
