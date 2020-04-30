@@ -3,16 +3,43 @@ library(cowplot)
 library(ggplot2)
 library(harmony)
 source("data_utils.R")
+source("qc_utils.R")
 
-qc_normalize = function(root.dir, expt.dir.path){
-    rdx = paste(root.dir, expt.dir.path, sep="/")
-    dfx = DropletUtils::read10xCounts(rdx)
+qc_normalize = function(expt.full.dir.path){
+    dfx = DropletUtils::read10xCounts(expt.full.dir.path)
     dfx = apply_cell_filters(dfx)
     dfx = apply_gene_filters(dfx)
     print(dfx)
     dfx = scran_normalize(dfx)
     dfx
 }
+
+qcload_10X_matrices = function(base.dir, dir.paths, data.names) {
+    mat10x.list = lapply(1:length(dir.paths),
+        function(i){
+            dfx = qc_normalize(paste(base.dir, dir.paths[i], sep="/"))
+            ctmtx = counts(dfx)
+            print(dim(ctmtx))
+            rownames(ctmtx) = rownames(dfx)
+            colnames(ctmtx) = 1:dim(dfx)[2]
+            ctmtx
+    })
+    names(mat10x.list) = data.names
+    print(sapply(mat10x.list, dim))
+
+    common.gene.names = rownames(mat10x.list[[1]])
+    for(i in 2:length(mat10x.list)){
+    common.gene.names = intersect(common.gene.names,
+                rownames(mat10x.list[[i]]))
+    }
+
+    for(i in 1:length(mat10x.list)){
+        mat10x.list[[i]] = mat10x.list[[i]][common.gene.names,]
+    }
+    print(sapply(mat10x.list, dim))
+    mat10x.list
+}
+
 
 dim_plot = function(sobj, reduce_by, group = "dataset",
 		    split=NULL, label=FALSE, 
@@ -80,15 +107,20 @@ harmony_tsne = function(athaliana, out.dir){
 	     out_file=paste(out.dir, "dim-tsne-integrated.png", sep="/"))
 }
 
-harmony_cluster = function(root.dir, data.file, out.dir){
+harmony_cluster = function(root.dir, data.file, out.dir, qc.flag){
     data.df = read.csv(data.file, header=TRUE, stringsAsFactors=FALSE)
     print(head(data.df))
     expt.dir.paths = data.df[,'dir.paths']
     short.names = data.df[,'short.names']
     project.names = data.df[, 'project.names']
     
-    athaliana.mlist = load_10X_matrices(root.dir, expt.dir.paths,
-                                        project.names)
+    athaliana.mlist = if(as.logical(qc.flag)){
+        qcload_10X_matrices(root.dir expt.dir.paths,
+                            project.names)
+    } else {
+        load_10X_matrices(root.dir, expt.dir.paths,
+                           project.names)
+    }
 
     athaliana = combined_seurat_object(athaliana.mlist, short.names)
 
@@ -105,10 +137,10 @@ harmony_cluster = function(root.dir, data.file, out.dir){
 
 args = commandArgs(trailingOnly=TRUE)
 
-if(length(args) >= 3){
-    harmony_cluster(args[1], args[2], args[3])
+if(length(args) >= 4){
+    harmony_cluster(args[1], args[2], args[3], args[4])
 }  else {
     print(args)
-    print("Usage: Rscript harmony_cluster.R root_dir data.file.csv out_dir")
+    print("Usage: Rscript harmony_cluster.R root_dir data.file.csv out_dir qc_flag")
 }
 
