@@ -4,33 +4,15 @@ library(ggplot2)
 library(harmony)
 source("data_utils.R")
 
-# root.dir = "/data/scRNAseq/athaliana/"
-# root.dir = "/nv/hswarm1/schockalingam6/data2/scRNAseq/data/"
-# root.dir = "/project/schockalingam6/scRNAseq/data/athaliana/"
-# control.dir.paths = c(
-# "E-CURD-5/control",
-# "E-GEOD-123013/control",
-# "E-GEOD-121619/control",
-# "E-CURD-4/control",
-# "E-ENAD-30/control"
-# )
-
-# project.names = c(
-# "E-CURD-5",
-# "E-GEOD-123013",
-# "E-GEOD-121619",
-# "E-CURD-4",
-# "E-ENAD-30"
-# )
-
-
-# short.names = c(
-# "CRD5",
-# "GEO3",
-# "GEO6",
-# "CRD4",
-# "NAD3"
-# )
+qc_normalize = function(root.dir, expt.dir.path){
+    rdx = paste(root.dir, expt.dir.path, sep="/")
+    dfx = DropletUtils::read10xCounts(rdx)
+    dfx = apply_cell_filters(dfx)
+    dfx = apply_gene_filters(dfx)
+    print(dfx)
+    dfx = scran_normalize(dfx)
+    dfx
+}
 
 dim_plot = function(sobj, reduce_by, group = "stim"){
     DimPlot(object = sobj, reduction = reduce_by, pt.size = .1, group.by = group)
