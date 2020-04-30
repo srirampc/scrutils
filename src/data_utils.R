@@ -1,5 +1,8 @@
 
 library("Seurat")
+library("harmony")
+library("stringr")
+
 load_10X_matrices = function(base.dir, dir.paths, data.names) {
     mat10x.list = lapply(1:length(dir.paths),
         function(i){
@@ -49,33 +52,50 @@ integrate_seurat_objects = function(athaliana.sobj, ndims = 1:30){
 }
 
 
-combined_seurat_object = function(data.mlist, short.names) {
-    data.combmat = do.call("cbind", data.mlist)
-    data.sobj = CreateSeuratObject(counts = data.combmat, project = "ATHSC", min.cells = 5)
-    data.sobj = data.sobj %>% Seurat::NormalizeData(verbose = FALSE)
-    data.sobj = data.sobj %>% FindVariableFeatures(selection.method = "vst", nfeatures = 2000)
-    data.sobj = data.sobj %>% ScaleData(verbose = FALSE) 
-    #
-    data.sobj = data.sobj %>% RunPCA(pc.genes = (data.sobj)@var.genes, npcs = 20, verbose = FALSE)
+combined_seurat_object = function(data.mlist, short.names, dim_name="dataset",
+				  nfeat=2000, mincells=5) {
     data.cnames = lapply(1:length(data.mlist), 
                 function(i){
                     c(rep(short.names[i], ncol(data.mlist[[i]])))
                 })
+    data.unames = lapply(1:length(data.mlist), 
+                function(i){
+                    str_c(short.names[i], 1:ncol(data.mlist[[i]]), sep="-")
+                })
     data.cnames = do.call("c", data.cnames)
-    data.sobj@meta.data$stim <- data.cnames
+    data.unames = do.call("c", data.unames)
+    data.combmat = do.call("cbind", data.mlist)
+    rownames(data.combmat) = rownames(data.mlist[[1]])
+    colnames(data.combmat) = data.unames
+    data.sobj = CreateSeuratObject(counts = data.combmat, project = "ATHSC", 
+				   min.cells = mincells)
+    data.sobj = data.sobj %>% Seurat::NormalizeData(verbose = FALSE)
+    data.sobj = data.sobj %>% FindVariableFeatures(selection.method = "vst", 
+						   nfeatures = nfeat)
+    data.sobj = data.sobj %>% ScaleData(verbose = FALSE) 
+    #
+    data.sobj = data.sobj %>% RunPCA(pc.genes = (data.sobj)@var.genes, 
+				     npcs = 20, verbose = FALSE)
+    data.sobj@meta.data[dim_name] <- data.cnames
     data.sobj
 }
 
-integrate_data_harmony = function(combo.sobj){
-    library(harmony)
-    combo.sobj <- combo.sobj %>% RunHarmony("stim")
+integrate_data_harmony = function(combo.sobj, dim_name="dataset"){
+    combo.sobj <- combo.sobj %>% RunHarmony(dim_name)
     harmony_embeddings <- Embeddings(combo.sobj, 'harmony')
-    list(comb.sobj, harmony_embeddings)
+    list(combo.sobj, harmony_embeddings)
 } 
 
 cluster_umap_seurat = function(data.obj, reduce_by, resolution=0.5, dims=1:20){
-    library(Seurat)
     data.obj = data.obj %>% RunUMAP(reduction = reduce_by, dims = dims)
+    data.obj = data.obj %>% FindNeighbors(reduction = reduce_by, dims = dims)
+    data.obj = data.obj %>% FindClusters(resolution = resolution)
+    data.obj = data.obj %>% identity()
+    data.obj
+}
+
+cluster_tsne_seurat = function(data.obj, reduce_by, resolution=0.5, dims=1:20){
+    data.obj = data.obj %>% RunTSNE(reduction = reduce_by, dims = dims)
     data.obj = data.obj %>% FindNeighbors(reduction = reduce_by, dims = dims)
     data.obj = data.obj %>% FindClusters(resolution = resolution)
     data.obj = data.obj %>% identity()

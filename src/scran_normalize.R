@@ -43,7 +43,7 @@ scran_normalize_dir = function(out_dir, out_prefix, in_base_dir, dirx, plot=FALS
 
     dfx = apply_cell_filters(dfx)
     dfx = apply_gene_filters(dfx)
-    print(dfx)
+    #print(dfx)
     dfx = scran_normalize(dfx)
 
     if(plot == TRUE){
