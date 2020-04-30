@@ -2,7 +2,7 @@ library(Seurat)
 source("data_utils.R")
 
 
-seurat_cluster = function(root.dir, data.file.csv){
+seurat_cluster = function(root.dir, data.file.csv, out.dir){
     data.df = read.csv(data.file, header=TRUE)
     expt.dir.paths = data.df$dir.paths
     short.names = data.df$short.names
@@ -15,9 +15,9 @@ seurat_cluster = function(root.dir, data.file.csv){
 
 args = commandArgs(trailingOnly=TRUE)
 
-if(length(args) >= 2){
-    seurat_cluster(args[1], args[2])
+if(length(args) >= 3){
+    seurat_cluster(args[1], args[2], args[3])
 }  else {
     print(args)
-    print("Usage: Rscript seurat_cluster.R root_dir data.file.csv")
+    print("Usage: Rscript seurat_cluster.R root_dir data.file.csv out.dir")
 }
