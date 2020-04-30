@@ -53,7 +53,7 @@ integrate_seurat_objects = function(athaliana.sobj, ndims = 1:30){
 
 
 combined_seurat_object = function(data.mlist, short.names, dim_name="dataset",
-				  nfeat=2000, mincells=5) {
+				  nfeat=2000, mincells=5, npcs=20) {
     data.cnames = lapply(1:length(data.mlist), 
                 function(i){
                     c(rep(short.names[i], ncol(data.mlist[[i]])))
@@ -75,7 +75,7 @@ combined_seurat_object = function(data.mlist, short.names, dim_name="dataset",
     data.sobj = data.sobj %>% ScaleData(verbose = FALSE) 
     #
     data.sobj = data.sobj %>% RunPCA(pc.genes = (data.sobj)@var.genes, 
-				     npcs = 20, verbose = FALSE)
+				     npcs = npcs, verbose = FALSE)
     data.sobj@meta.data[dim_name] <- data.cnames
     data.sobj
 }
@@ -98,7 +98,7 @@ cluster_umap_seurat = function(data.obj, reduce_by, resolution=0.5, dims=1:20){
 scran_normalize = function(dfx){
     clusters <- scran::quickCluster(dfx)
     dfx <- scran::computeSumFactors(dfx, clusters=clusters)
-    summary(scran::sizeFactors(dfx))
+    #print(summary(scater::sizeFactors(dfx)))
     dfx <- scater::logNormCounts(dfx)
     dfx
 }
