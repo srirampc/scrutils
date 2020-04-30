@@ -1,30 +1,23 @@
 
 library(scran)
 library("DropletUtils")
-source("scater_qc_utils.R")
-source("seurat_plot_utils.R")
+source("qc_utils.R")
+source("plot_utils.R")
+source("data_utils.R")
 
-scran_normalize = function(dfx){
-    clusters <- quickCluster(dfx)
-    dfx <- computeSumFactors(dfx, clusters=clusters)
-    summary(sizeFactors(dfx))
-    dfx <- logNormCounts(dfx)
-    dfx
-}
 variance_plot = function(dfx, fname){
-    dec = modelGeneVar(dfx)
+    dec = scran::modelGeneVar(dfx)
     png(file=fname)
     plot(dec$mean, dec$total, xlab="Mean log-expression", ylab="Variance")
     curve(metadata(dec)$trend(x), col="blue", add=TRUE)
     dev.off()
 }
 
-
 scran_normalize_dir = function(out_dir, out_prefix, in_base_dir, dirx, plot=FALSE){
     rdx = paste(in_base_dir, dirx, sep="/")
-    dfx = read10xCounts(rdx)
+    dfx = DropletUtils::read10xCounts(rdx)
     if(plot == TRUE){
-        dfx2 = logNormCounts(dfx)
+        dfx2 = scater::logNormCounts(dfx)
         print(dim(dfx2))
         fname = paste(out_dir, dirx, 
             paste(out_prefix, "-variance-before.png", sep=""),
@@ -61,6 +54,7 @@ scran_normalize_dir = function(out_dir, out_prefix, in_base_dir, dirx, plot=FALS
         scrj = CreateSeuratObject(counts = ctmtx, project = dirx)
         seurat_fscatter(scrj, fname)
     }
+    dfx
 }
 
 args = commandArgs(trailingOnly=TRUE)

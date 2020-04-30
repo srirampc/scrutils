@@ -1,5 +1,5 @@
-source("scater_qc_utils.R")
-source("scater_plot_utils.R")
+source("qc_utils.R")
+source("plot_utils.R")
 
 
 apply_filter_dirs = function(out_dir, out_prefix, glist_file,

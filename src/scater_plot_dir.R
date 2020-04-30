@@ -1,5 +1,4 @@
-source("seurat_plot_utils.R")
-source("scater_plot_utils.R")
+source("plot_utils.R")
 
 
 args = commandArgs(trailingOnly=TRUE)

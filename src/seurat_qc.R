@@ -1,4 +1,4 @@
-source("seurat_plot_utils.R")
+source("plot_utils.R")
 
 main = function(data.dir,plot.prefix, plot.suffix){
    seurat_allqc_plot(data.dir,plot.prefix, plot.suffix)

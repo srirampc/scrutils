@@ -81,3 +81,13 @@ cluster_umap_seurat = function(data.obj, reduce_by, resolution=0.5, dims=1:20){
     data.obj = data.obj %>% identity()
     data.obj
 }
+
+
+scran_normalize = function(dfx){
+    clusters <- scran::quickCluster(dfx)
+    dfx <- scran::computeSumFactors(dfx, clusters=clusters)
+    summary(scran::sizeFactors(dfx))
+    dfx <- scater::logNormCounts(dfx)
+    dfx
+}
+
