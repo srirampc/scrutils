@@ -26,8 +26,8 @@ load_10X_matrices = function(base.dir, dir.paths, data.names) {
 }
 
 load_10X_seurat_objects = function(base.dir, dir.paths, data.names,
-                                    min.cells = 3,
-                                    min.feats=200, nfeats=2000)) {
+                                    short.names, dim.name="dataset", min.cells = 3,
+                                    min.feats=200, nfeats=2000) {
     mat10x.list = load_10X_matrices(base.dir, dir.paths, data.names)
 
     mat10X.sobjects = lapply(1:length(mat10x.list),
@@ -39,6 +39,7 @@ load_10X_seurat_objects = function(base.dir, dir.paths, data.names,
             sobj = NormalizeData(sobj)
             sobj = FindVariableFeatures(sobj, selection.method="vst",
                     nfeatures=nfeats)
+            sobj@meta.data[dim.name] <- c(rep(short.names[i], ncol(cmatx)))
             sobj
         })
     cat("Objects loaded and Normalized")
@@ -141,13 +142,13 @@ qcload_10X_matrices = function(base.dir, dir.paths, data.names, qc.function) {
 
 
 qcload_10X_seurat_objects = function(base.dir, dir.paths, data.names, 
-                                     short.names,
-                                     qc.function, min.cells = 3,
-                                     min.feats=200, nfeats=2000) {
+                                     short.names, qc.function, dim.name="dataset",
+				     min.cells = 3, min.feats=200, nfeats=2000) {
 
     mat10X.sobjects = lapply(1:length(dir.paths),
         function(i){
-            cmatx = qc.function(paste(base.dir, dir.paths[i], sep="/")
+            cmatx = qc.function(paste(base.dir, dir.paths[i], sep="/"))
+            colnames(cmatx) = str_c(short.names[i], 1:dim(cmatx)[2], sep="_")
             sobj = CreateSeuratObject(counts = cmatx,
                 project = data.names[i],
                 min.cells = min.cells,
@@ -155,7 +156,7 @@ qcload_10X_seurat_objects = function(base.dir, dir.paths, data.names,
             # sobj = NormalizeData(sobj)
             sobj = FindVariableFeatures(sobj, selection.method="vst",
                     nfeatures=nfeats)
-            sobj@meta.data[dim_name] <- c(rep(short.names[i], ncol(cmatx)))
+            sobj@meta.data[dim.name] <- c(rep(short.names[i], ncol(cmatx)))
             sobj
         })
     cat("Objects loaded")
