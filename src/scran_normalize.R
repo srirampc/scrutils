@@ -1,6 +1,6 @@
 
 library(scran)
-library("DropletUtils")
+library(DropletUtils)
 source("qc_utils.R")
 source("plot_utils.R")
 source("data_utils.R")

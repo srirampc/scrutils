@@ -1,7 +1,7 @@
 
-library("Seurat")
-library("harmony")
-library("stringr")
+library(Seurat)
+library(harmony)
+library(stringr)
 
 load_10X_matrices = function(base.dir, dir.paths, data.names) {
     mat10x.list = lapply(1:length(dir.paths),

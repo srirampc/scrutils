@@ -1,5 +1,5 @@
 library(scater)
-library("DropletUtils")
+library(DropletUtils)
 library(RColorBrewer)
 library(VennDiagram)
 library(Seurat)

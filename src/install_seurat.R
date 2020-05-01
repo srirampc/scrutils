@@ -1,10 +1,22 @@
-install.packages("BiocManager")
+#install.packages("BiocManager")
 BiocManager::install("devtools")
 BiocManager::install("bitops")
-#install.packages("/nv/hswarm1/schockalingam6/data/downloads/caTools_1.17.1.4.tar.gz", repos=NULL, type="source")
 BiocManager::install("Seurat")
+
+BiocManager::install("cowplot")
+BiocManager::install("dplyr")
+BiocManager::install("DropletUtils")
+BiocManager::install("ggplot2")
+BiocManager::install("harmony")
+BiocManager::install("RColorBrewer")
+BiocManager::install("scater")
+BiocManager::install("scran")
+BiocManager::install("stringr")
+BiocManager::install("VennDiagram")
+
+
+devtools::install_github("immunogenomics/harmony")
 devtools::install_github('satijalab/seurat-data')
 library(Seurat)
 library(SeuratData)
 InstallData("panc8")
-
