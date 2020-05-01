@@ -100,3 +100,21 @@ apply_gene_filters = function(dfx){
     feat_drop = avg_reads_feat_filter(dfx)
     dfx[!feat_drop, ]
 }
+
+qc_normalize = function(expt.full.dir.path){
+    dfx = read10xCounts(expt.full.dir.path)
+    dfx = apply_cell_filters(dfx)
+    dfx = apply_gene_filters(dfx)
+    print(dfx)
+    dfx = scran_normalize(dfx)
+    dfx
+}
+
+qc_normalize_matrix = function(expt.full.dir.path){
+    dfx = qc_normalize(expt.full.dir.path)
+    ctmtx = counts(dfx)
+    print(dim(ctmtx))
+    rownames(ctmtx) = rownames(dfx)
+    colnames(ctmtx) = 1:dim(dfx)[2]
+    ctmtx
+}

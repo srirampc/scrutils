@@ -4,80 +4,7 @@ library(ggplot2)
 library(harmony)
 source("data_utils.R")
 source("qc_utils.R")
-
-qc_normalize = function(expt.full.dir.path){
-    dfx = DropletUtils::read10xCounts(expt.full.dir.path)
-    dfx = apply_cell_filters(dfx)
-    dfx = apply_gene_filters(dfx)
-    print(dfx)
-    dfx = scran_normalize(dfx)
-    dfx
-}
-
-qcload_10X_matrices = function(base.dir, dir.paths, data.names) {
-    mat10x.list = lapply(1:length(dir.paths),
-        function(i){
-            dfx = qc_normalize(paste(base.dir, dir.paths[i], sep="/"))
-            ctmtx = counts(dfx)
-            print(dim(ctmtx))
-            rownames(ctmtx) = rownames(dfx)
-            colnames(ctmtx) = 1:dim(dfx)[2]
-            ctmtx
-    })
-    names(mat10x.list) = data.names
-    print(sapply(mat10x.list, dim))
-
-    common.gene.names = rownames(mat10x.list[[1]])
-    for(i in 2:length(mat10x.list)){
-    common.gene.names = intersect(common.gene.names,
-                rownames(mat10x.list[[i]]))
-    }
-
-    for(i in 1:length(mat10x.list)){
-        mat10x.list[[i]] = mat10x.list[[i]][common.gene.names,]
-    }
-    print(sapply(mat10x.list, dim))
-    mat10x.list
-}
-
-
-dim_plot = function(sobj, reduce_by, group = "dataset",
-		    split=NULL, label=FALSE, 
-		    width=6, height=4,
-		    out_file=NULL){
-    if(!is.null(out_file)) {
-       options(repr.plot.height = height, repr.plot.width = width)
-    }
-    px = DimPlot(object = sobj, reduction = reduce_by, pt.size = .1, 
-	    group.by = group, split.by=split, label=label)
-    if(!is.null(out_file)) {
-        ggsave(out_file, px, width=width, height=height)
-    }
-    px
-}
-violin_plot = function(sobj, feats, group = "dataset", 
-		       width=6, height=4,
-		       out_file=NULL) {
-    if(!is.null(out_file)) {
-       options(repr.plot.height = height, repr.plot.width = width)
-    }
-    px = VlnPlot(object = sobj, features = feats, group.by = group, pt.size = .1)
-    if(!is.null(out_file)) {
-        ggsave(out_file, px, width=width, height=height)
-    }
-    px
-}
-
-dim_violin_plot = function(sobj, reduce_by, feats, group, out_file = NULL){
-    options(repr.plot.height = 5, repr.plot.width = 12)
-    p1 = dim_plot(sobj, reduce_by, group)
-    p2 = violin_plot(sobj, feats, group)
-    p3 = plot_grid(p1, p2)
-    if(!is.null(out_file)){
-        ggsave(out_file, p2, width=12, height=5)
-    }
-    p2
-}
+source("plot_utils.R")
 
 combined_umap = function(athaliana, out.dir, reduce_by="harmony"){
     #
@@ -139,7 +66,7 @@ harmony_cluster = function(root.dir, data.file, out.dir, qc.flag){
     
     athaliana.mlist = if(as.logical(qc.flag)){
         qcload_10X_matrices(root.dir, expt.dir.paths,
-                            project.names)
+                            project.names, qc_normalize_matrix)
     } else {
         load_10X_matrices(root.dir, expt.dir.paths,
                            project.names)

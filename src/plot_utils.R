@@ -650,3 +650,43 @@ seurat_ba_qcplot = function(data.dir, all_thrs, dirx, out.dir, out.prefix, plot.
     seurat_fscatter(scrj2, fname)
 }
 
+
+dim_plot = function(sobj, reduce_by, group = "dataset",
+		    split=NULL, label=FALSE, 
+		    width=6, height=4,
+		    out_file=NULL){
+    if(!is.null(out_file)) {
+       options(repr.plot.height = height, repr.plot.width = width)
+    }
+    px = DimPlot(object = sobj, reduction = reduce_by, pt.size = .1, 
+	    group.by = group, split.by=split, label=label)
+    if(!is.null(out_file)) {
+        ggsave(out_file, px, width=width, height=height)
+    }
+    px
+}
+
+violin_plot = function(sobj, feats, group = "dataset", 
+		       width=6, height=4,
+		       out_file=NULL) {
+    if(!is.null(out_file)) {
+       options(repr.plot.height = height, repr.plot.width = width)
+    }
+    px = VlnPlot(object = sobj, features = feats, group.by = group, pt.size = .1)
+    if(!is.null(out_file)) {
+        ggsave(out_file, px, width=width, height=height)
+    }
+    px
+}
+
+dim_violin_plot = function(sobj, reduce_by, feats, group, out_file = NULL){
+    options(repr.plot.height = 5, repr.plot.width = 12)
+    p1 = dim_plot(sobj, reduce_by, group)
+    p2 = violin_plot(sobj, feats, group)
+    p3 = plot_grid(p1, p2)
+    if(!is.null(out_file)){
+        ggsave(out_file, p2, width=12, height=5)
+    }
+    p2
+}
+

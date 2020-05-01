@@ -25,18 +25,20 @@ load_10X_matrices = function(base.dir, dir.paths, data.names) {
     mat10x.list
 }
 
-load_10X_seurat_objects = function(base.dir, dir.paths, data.names) {
+load_10X_seurat_objects = function(base.dir, dir.paths, data.names,
+                                    min.cells = 3,
+                                    min.feats=200, nfeats=2000)) {
     mat10x.list = load_10X_matrices(base.dir, dir.paths, data.names)
 
     mat10X.sobjects = lapply(1:length(mat10x.list),
         function(i){
             sobj = CreateSeuratObject(counts = mat10x.list[[i]],
                 project = data.names[i],
-                min.cells = 3,
-                min.features = 200)
+                min.cells = min.cells,
+                min.features = min.feats)
             sobj = NormalizeData(sobj)
             sobj = FindVariableFeatures(sobj, selection.method="vst",
-                    nfeatures=2000)
+                    nfeatures=nfeats)
             sobj
         })
     cat("Objects loaded and Normalized")
@@ -109,4 +111,52 @@ cluster_tsne_seurat = function(data.obj, reduce_by, resolution=0.5, dims=1:20){
     data.obj = data.obj %>% FindClusters(resolution = resolution)
     data.obj = data.obj %>% identity()
     data.obj
+}
+
+qcload_10X_matrices = function(base.dir, dir.paths, data.names, qc.function) {
+    mat10x.list = lapply(1:length(dir.paths),
+        function(i){
+            # dfx = qc_normalize(paste(base.dir, dir.paths[i], sep="/"))
+            # ctmtx = counts(dfx)
+            # print(dim(ctmtx))
+            # rownames(ctmtx) = rownames(dfx)
+            # colnames(ctmtx) = 1:dim(dfx)[2]
+            # ctmtx
+            qc.function(paste(base.dir, dir.paths[i], sep="/"))
+    })
+    names(mat10x.list) = data.names
+    print(sapply(mat10x.list, dim))
+
+    common.gene.names = rownames(mat10x.list[[1]])
+    for(i in 2:length(mat10x.list)){
+    common.gene.names = intersect(common.gene.names,
+                rownames(mat10x.list[[i]]))
+    }
+
+    for(i in 1:length(mat10x.list)){
+        mat10x.list[[i]] = mat10x.list[[i]][common.gene.names,]
+    }
+    print(sapply(mat10x.list, dim))
+    mat10x.list
+}
+
+
+qcload_10X_seurat_objects = function(base.dir, dir.paths, data.names,
+                                     qc.function, min.cells = 3,
+                                     min.feats=200, nfeats=2000) {
+
+    mat10X.sobjects = lapply(1:length(dir.paths),
+        function(i){
+            cmatx = qc.function(paste(base.dir, dir.paths[i], sep="/")
+            sobj = CreateSeuratObject(counts = cmatx,
+                project = data.names[i],
+                min.cells = min.cells,
+                min.features = min.feats)
+            # sobj = NormalizeData(sobj)
+            sobj = FindVariableFeatures(sobj, selection.method="vst",
+                    nfeatures=nfeats)
+            sobj
+        })
+    cat("Objects loaded")
+    mat10X.sobjects
 }
