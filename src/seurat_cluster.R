@@ -11,7 +11,7 @@ seurat_cluster = function(root.dir, data.file.csv, out.dir, qc.flag){
 
     athaliana.sobj = if(as.logical(qc.flag)){
         qcload_10X_seurat_objects(root.dir, expt.dir.paths,
-                            project.names, qc_normalize_matrix)
+                            project.names, short.names, qc_normalize_matrix)
     } else {
         load_10X_seurat_objects(root.dir, expt.dir.paths,
                            project.names)

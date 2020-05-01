@@ -46,7 +46,6 @@ load_10X_seurat_objects = function(base.dir, dir.paths, data.names,
 }
 
 
-
 integrate_seurat_objects = function(athaliana.sobj, ndims = 1:30){
     athaliana.anchors = FindIntegrationAnchors(
         object.list = athaliana.sobj, dims = ndims)
@@ -141,7 +140,8 @@ qcload_10X_matrices = function(base.dir, dir.paths, data.names, qc.function) {
 }
 
 
-qcload_10X_seurat_objects = function(base.dir, dir.paths, data.names,
+qcload_10X_seurat_objects = function(base.dir, dir.paths, data.names, 
+                                     short.names,
                                      qc.function, min.cells = 3,
                                      min.feats=200, nfeats=2000) {
 
@@ -155,6 +155,7 @@ qcload_10X_seurat_objects = function(base.dir, dir.paths, data.names,
             # sobj = NormalizeData(sobj)
             sobj = FindVariableFeatures(sobj, selection.method="vst",
                     nfeatures=nfeats)
+            sobj@meta.data[dim_name] <- c(rep(short.names[i], ncol(cmatx)))
             sobj
         })
     cat("Objects loaded")
