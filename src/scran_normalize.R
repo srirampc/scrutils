@@ -14,13 +14,14 @@ variance_plot = function(dfx, fname){
 }
 
 scran_normalize_dir = function(out_dir, out_prefix, 
-                        in_base_dir, dirx, image.option="png",
-                        plot=FALSE){
+                        in_base_dir, dirx, 
+			plot=FALSE, image.option="png"){
     rdx = paste(in_base_dir, dirx, sep="/")
     dfx = DropletUtils::read10xCounts(rdx)
+    cat(dirx)
     if(plot == TRUE){
         dfx2 = scater::logNormCounts(dfx)
-        print(dim(dfx2))
+        #print(dim(dfx2))
         fname = paste(out_dir, dirx, 
             paste(out_prefix, "-variance-before.", image.option, sep=""),
             sep="/"  )
@@ -29,13 +30,12 @@ scran_normalize_dir = function(out_dir, out_prefix,
             paste(out_prefix, "-seurat-scatter-before.", image.option, sep=""),
         sep="/"  )
         ctmtx = counts(dfx2)
-        print(dim(ctmtx))
+        #print(dim(ctmtx))
         rownames(ctmtx) = rownames(dfx2)
         colnames(ctmtx) = 1:dim(dfx2)[2]
         scrj = CreateSeuratObject(counts = ctmtx, project = dirx)
         seurat_fscatter(scrj, fname)
     }
-
     dfx = apply_cell_filters(dfx)
     dfx = apply_gene_filters(dfx)
     #print(dfx)
@@ -56,33 +56,35 @@ scran_normalize_dir = function(out_dir, out_prefix,
         scrj = CreateSeuratObject(counts = ctmtx, project = dirx)
         seurat_fscatter(scrj, fname)
     }
+    cat("\n")
     dfx
 }
 
 scran_main = function(in_base_dir, data.file, 
-                      out_dir, out_prefix, image.option){
+                      out_dir, out_prefix, plot, image.option){
     data.df = read.csv(data.file, header=TRUE, stringsAsFactors=FALSE)
     expt.dir.paths = data.df$dir.paths
     short.names = data.df$short.names
     project.names = data.df$project.names
+    plot = as.logical(plot)
 
     for(dirx in expt.dir.paths){
         scran_normalize_dir(out_dir, out_prefix, 
-                            in_base_dir, dirx, image.option)
+                            in_base_dir, dirx, plot, image.option)
     }
 }
 
 args = commandArgs(trailingOnly=TRUE)
-cmd_usage = "Usage:  Rscript scran_normalize.R in_base_dir data.file.csv out_dir out_prefix png/pdf"
+cmd_usage = "Usage:  Rscript scran_normalize.R in_base_dir data.file.csv out_dir out_prefix plot(TRE/FALSE) png/pdf"
 
-if(length(args) >= 5){
-    if((args[5] == "png" || args[5] == "pdf")){
-        scran_main(args[1], args[2], args[3], args[4], args[5])
+if(length(args) >= 6){
+    if((args[6] == "png" || args[6] == "pdf")){
+        scran_main(args[1], args[2], args[3], args[4], args[5], args[6])
     } else {
         print(args)
-        print(usage)
+        print(cmd_usage)
     }
 }  else {
     print(args)
-    print(usage)
+    print(cmd_usage)
 }

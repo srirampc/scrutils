@@ -77,14 +77,14 @@ apply_filter_dirs = function(out_dir, out_prefix, glist_file,
         venn_fname = paste(out_dir, dx,
            paste(out_prefix, "-filter-venn.png", sep=""),
         sep="/"  )
-        filter_venn(filter_list, filter_names, venn_fname image.option)
+        filter_venn(filter_list, filter_names, venn_fname, image.option)
 
         cat("\n")
     }
 }
 
-qcwf_main(in_base_dir, data.file, glist_file, 
-          out_dir, out_prefix, image.option){
+qcwf_main = function(in_base_dir, data.file, glist_file, 
+                    out_dir, out_prefix, image.option){
     data.df = read.csv(data.file, header=TRUE, stringsAsFactors=FALSE)
     expt.dir.paths = data.df$dir.paths
     short.names = data.df$short.names

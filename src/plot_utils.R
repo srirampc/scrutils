@@ -504,7 +504,7 @@ plot_hist = function(per.cell, per.feat, dfx, dirx,
 
 plot_qcstats = function(in_base_dir, in_dirs, out_dir, out_prefix, image.option){
     outfile = paste(out_dir, "scater-qc.tsv", sep="/")
-    get_qcstats(outfile, in_dirs)
+    get_qcstats(outfile, paste(in_base_dir, in_dirs, sep="/"))
     for(dirx in in_dirs){
         dfx = read10xCounts(paste(in_base_dir, dirx, sep="/"))
         per.cell = perCellQCMetrics(dfx, 
