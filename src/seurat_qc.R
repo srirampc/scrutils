@@ -9,5 +9,5 @@ args = commandArgs(trailingOnly=TRUE)
 if(length(args) == 3){
    main(args[1], args[2], args[3])
 } else {
-   cat("Need 3 args : data.dir, out.dir, plot.suffix")
+   cat("Need 3 args : data.dir, out.dir, png/pdf")
 }

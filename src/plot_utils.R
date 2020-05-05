@@ -55,7 +55,7 @@ get_qcstats = function(outfile, indirs){
 plot_mcg_hist = function(per.cell, dirx, fname){
     mcgpct = per.cell$subsets_MCG_percent
     log_mcg = log10(mcgpct)
-    png(file=fname)
+    if(endsWith(fname, "png")) png(file=fname) else pdf(file=fname)
     log_mcgf = log_mcg
     log_mcg = log_mcg[log_mcg > -2.3]
     mcg_nmads = isOutlier(log_mcg, nmads=3, typ="higher")
@@ -85,7 +85,7 @@ plot_mcg_hist = function(per.cell, dirx, fname){
 plot_feat_counts_hist = function(per.feat, dfx, dirx, fname){
     featcts = per.feat$detected * dim(dfx)[2]/100.0
     log_featcts = log10(featcts)
-    png(file=fname)
+    if(endsWith(fname, "png")) png(file=fname) else pdf(file=fname)
     xhist = hist(log_featcts, breaks=120,
             xlab=expression(Log[10]~"No. cells"), ylab="No. genes",
             main=dirx, prob=TRUE)
@@ -105,7 +105,7 @@ plot_feat_counts_hist = function(per.feat, dfx, dirx, fname){
 plot_feat_avg_hist = function(per.feat, dirx, fname, midv=TRUE){
     featavg = per.feat$mean 
     log_featavg = log10(featavg)
-    png(file=fname)
+    if(endsWith(fname, "png")) png(file=fname) else pdf(file=fname)
     xhist = hist(log_featavg, breaks=120, xlab=expression(Log[10]~"Avg. No. Reads"), ylab="Prob. No. cells", 
         main=dirx, prob=TRUE)
     lines(density(log_featavg), col="blue", lwd=2)
@@ -164,7 +164,7 @@ plot_counts_avg_hist = function(per.cell, dfx, dirx, fname){
 plot_logcounts_hist = function(per.cell, dfx, dirx, fname, print_values=TRUE){
     libsize = per.cell$sum 
     log_libsize = log10(libsize)
-    png(file=fname)
+    if(endsWith(fname, "png")) png(file=fname) else pdf(file=fname)
     log_libsizef= log_libsize
     #log_libsize = log_libsize[log_libsize < 1]
     lsize_mad = mad(log_libsize)
@@ -222,7 +222,7 @@ plot_logcounts_hist = function(per.cell, dfx, dirx, fname, print_values=TRUE){
 plot_counts_logavg_hist = function(per.cell, dfx, dirx, fname, print_values=TRUE){
     libmean = per.cell$sum / dim(dfx)[2]
     log_libmean = log10(libmean)
-    png(file=fname)
+    if(endsWith(fname, "png")) png(file=fname) else pdf(file=fname)
     log_libmeanf= log_libmean
     #log_libmean = log_libmean[log_libmean < 1]
     lmean_mad = mad(log_libmean)
@@ -278,7 +278,7 @@ plot_counts_logavg_hist = function(per.cell, dfx, dirx, fname, print_values=TRUE
 plot_counts_logavg_hist2 = function(per.cell, lmean_3madsp, dfx, dirx, fname) {
     libmean = per.cell$sum / dim(dfx)[2]
     log_libmean = log10(libmean)
-    png(file=fname)
+    if(endsWith(fname, "png")) png(file=fname) else pdf(file=fname)
     log_libmeanf= log_libmean
     log_libmean = log_libmean[log_libmean < lmean_3madsp]
     lmean_mad = mad(log_libmean)
@@ -320,7 +320,7 @@ plot_counts_logavg_hist2 = function(per.cell, lmean_3madsp, dfx, dirx, fname) {
 plot_ngenes = function(per.cell, dirx, fname, print_values=TRUE){
     ngenes = per.cell$detected
     log_ngenes = log10(ngenes)
-    png(file=fname)
+    if(endsWith(fname, "png")) png(file=fname) else pdf(file=fname)
     log_ngenesf = log_ngenes
     #log_ngenes = log_ngenes[log_ngenes < 5]
     ngenes_nmad = isOutlier(log_ngenes, nmads=3, typ="higher")
@@ -360,7 +360,7 @@ plot_ngenes = function(per.cell, dirx, fname, print_values=TRUE){
 plot_feat_counts_flip_hist = function(per.feat, dfx, dirx, fname){
     featcts = per.feat$detected * dim(dfx)[2]/100.0
     log_featcts = log10(featcts)
-    png(file=fname)
+    if(endsWith(fname, "png")) png(file=fname) else pdf(file=fname)
     xhist = hist(log_featcts, breaks=200,plot = FALSE)
     plot(x = xhist$mids, y = xhist$counts, type='h',
             ylab=expression(Log[10]~"No. cells"), xlab="No. genes", main=dirx)
@@ -376,7 +376,7 @@ plot_feat_counts_flip_hist = function(per.feat, dfx, dirx, fname){
 plot_counts_flip_hist = function(per.cell, dirx, fname){
     libsize = per.cell$sum
     log_libsize = log10(libsize); 
-    png(file=fname)
+    if(endsWith(fname, "png")) png(file=fname) else pdf(file=fname)
     xhist = hist(log_libsize, breaks=200,plot = FALSE)
     plot(x = xhist$mids, y = xhist$counts, type='h', xlab="No. cells", ylab=expression(Log[10]~"No. Reads"))
     xrange = (xhist$mids < 2.0) & (xhist$mids > 1.0)  & (xhist$counts > 0)
@@ -391,7 +391,7 @@ plot_counts_flip_hist = function(per.cell, dirx, fname){
 
 plot_cell_ngenes_flip_hist = function(per.cell, dirx, fname){
     ngenes = per.cell$detected
-    png(file=fname)
+    if(endsWith(fname, "png")) png(file=fname) else pdf(file=fname)
     xhist = hist(ngenes, breaks=200,plot = FALSE)
     plot(x = xhist$mids, y = xhist$counts, type='h', xlab="No. cells", ylab="No. genes")
     dev.off()
@@ -401,7 +401,7 @@ plot_cell_ngenes_flip_hist = function(per.cell, dirx, fname){
 plot_mcg_flip_hist = function(per.cell, dirx, fname){
     mcgpct = per.cell$subsets_MCG_percent
     log_mcg = log10(mcgpct)
-    png(file=fname)
+    if(endsWith(fname, "png")) png(file=fname) else pdf(file=fname)
     xhist = hist(log_mcg, breaks=200,plot = FALSE)
     plot(x = xhist$mids, y = xhist$counts, type='h', xlab="No. cells", ylab=expression(Log[10]~"MCG %"))
     xrange = (xhist$mids < 2.0) & (xhist$mids > 1.0)  & (xhist$counts > 0)
@@ -418,7 +418,7 @@ plot_mcg_flip_hist = function(per.cell, dirx, fname){
 plot_feat_avg_flip_hist = function(per.feat, dirx, fname){
     featavg = per.feat$mean 
     log_favg = log10(featavg)
-    png(file=fname)
+    if(endsWith(fname, "png")) png(file=fname) else pdf(file=fname)
     xhist = hist(log10(featavg), breaks=100,plot = FALSE)
     plot(x = xhist$mids, y = xhist$counts, type='h',
         ylab=expression(Log[10]~"Avg. No. Reads"), xlab="No. cells", 
@@ -434,61 +434,67 @@ plot_feat_avg_flip_hist = function(per.feat, dirx, fname){
 }
 
 
-plot_flip_hist = function(per.cell, per.feat, dfx, dirx, out_dir, out_prefix){
-    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-feat-filp-hist.png", sep=""), sep="/"  )
+plot_flip_hist = function(per.cell, per.feat, dfx, dirx, out_dir, out_prefix, image.option="png"){
+    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-feat-filp-hist.", image.option, sep=""), sep="/"  )
     plot_feat_counts_flip_hist(per.feat, dfx, dirx, fname)
     
-    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-counts-flip-hist.png", sep=""), sep="/"  )
+    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-counts-flip-hist.", image.option, sep=""), sep="/"  )
     plot_counts_flip_hist(per.cell, dirx, fname)
     
-    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-ngenes-flip-hist.png", sep=""), sep="/"  )
+    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-ngenes-flip-hist.", image.option, sep=""), sep="/"  )
     plot_cell_ngenes_flip_hist(per.cell, dirx, fname)
 
-    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-mcgpct-flip-hist.png", sep=""), sep="/"  )
+    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-mcgpct-flip-hist.", image.option, sep=""), sep="/"  )
     plot_mcg_flip_hist(per.cell, dirx, fname)
 
-    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-favg-flip-hist.png", sep=""), sep="/"  )
+    fname = paste(out_dir, dirx, paste(out_prefix, "-scater-qc-favg-flip-hist.", image.option, sep=""), sep="/"  )
     plot_feat_avg_flip_hist(per.feat, dirx, fname)
 }
 
 
-plot_hist = function(per.cell, per.feat, dfx, dirx, out_dir, out_prefix){
+plot_hist = function(per.cell, per.feat, dfx, dirx,
+                     out_dir, out_prefix, image.option="png"){
     cat("Dims: ",  dirx, dim(dfx), "\n")
 
     fname = paste(out_dir, dirx, 
         paste(out_prefix,
-            "-scater-qc-mcgpct-hist.png", sep=""),
+            "-scater-qc-mcgpct-hist.", image.option, sep=""),
         sep="/"  )
     mcg_threshold = plot_mcg_hist(per.cell, dirx, fname)
 
     fname = paste(out_dir, dirx, 
         paste(out_prefix, 
-            "-scater-qc-feat-hist.png", sep=""),
+            "-scater-qc-feat-hist.", image.option, sep=""),
         sep="/"  )
     feat_cells_threshold = plot_feat_counts_hist(per.feat, dfx, dirx, fname)
 
     fname = paste(out_dir, dirx,
-        paste(out_prefix, "-scater-qc-feats-avg-hist.png", sep=""),
+        paste(out_prefix, "-scater-qc-feats-avg-hist.",
+              image.option, sep=""),
         sep="/"  )
     plot_feat_avg_hist(per.feat, dirx, fname)
 
     fname = paste(out_dir, dirx,
-        paste(out_prefix, "-scater-qc-counts-avg-hist.png", sep=""),
+        paste(out_prefix, "-scater-qc-counts-avg-hist.",
+              image.option, sep=""),
         sep="/"  )
     plot_counts_avg_hist(per.cell, dfx, dirx, fname)
 
     fname = paste(out_dir, dirx, 
-        paste(out_prefix, "-scater-qc-counts-logavg-hist.png", sep=""),
+        paste(out_prefix, "-scater-qc-counts-logavg-hist.",
+              image.option, sep=""),
         sep="/"  )
     lmean_3madsp = plot_counts_logavg_hist(per.cell, dfx, dirx, fname)
 
     fname = paste(out_dir, dirx,
-        paste(out_prefix, "-scater-qc-counts-logavg-hist2.png", sep=""),
+        paste(out_prefix, "-scater-qc-counts-logavg-hist2.",
+              image.option, sep=""),
         sep="/"  )
     plot_counts_logavg_hist2(per.cell, lmean_3madsp, dfx, dirx, fname)
 
     fname = paste(out_dir, dirx,
-        paste(out_prefix, "-scater-qc-ngenes-hist.png", sep=""),
+        paste(out_prefix, "-scater-qc-ngenes-hist.",
+              image.option, sep=""),
         sep="/"  )
     plot_ngenes(per.cell, dirx, fname)
 
@@ -496,49 +502,50 @@ plot_hist = function(per.cell, per.feat, dfx, dirx, out_dir, out_prefix){
 }
 
 
-plot_qcstats = function(out_dir, out_prefix, in_dirs){
+plot_qcstats = function(in_base_dir, in_dirs, out_dir, out_prefix, image.option){
     outfile = paste(out_dir, "scater-qc.tsv", sep="/")
     get_qcstats(outfile, in_dirs)
     for(dirx in in_dirs){
-        dfx = read10xCounts(dirx)
+        dfx = read10xCounts(paste(in_base_dir, dirx, sep="/"))
         per.cell = perCellQCMetrics(dfx, 
             subset=list(MCG=grep("AT[MC]G",
                             rownames(dfx))))
         per.feat = perFeatureQCMetrics(dfx)
-        #plot_flip_hist(per.cell, per.feat, dfx, dirx, out_dir, out_prefix)
-        all_thrs = plot_hist(per.cell, per.feat, dfx, dirx, out_dir, out_prefix)
-        #seurat_ba_qcplot(dirx, all_thrs, out_dir, out_prefix, ".png")
+        #plot_flip_hist(per.cell, per.feat, dfx, dirx, out_dir, out_prefix, image.option)
+        all_thrs = plot_hist(per.cell, per.feat, dfx, dirx, out_dir, out_prefix, image.option)
+        #seurat_ba_qcplot(dirx, all_thrs, out_dir, out_prefix, image.option)
     }
 }
 
 
 plot_cells_hist = function(dfx, dirx, name_prefix,
-                           out_dir, out_prefix){
+                           out_dir, out_prefix, image.option="png"){
     per.cell = perCellQCMetrics(dfx,
         subset=list(MCG=grep("AT[MC]G",
                         rownames(dfx))))
     fname = paste(out_dir, dirx,
         paste(out_prefix, name_prefix,
-              "-scater-qc-logcounts-hist.png", sep=""),
+              "-scater-qc-logcounts-hist.", image.option, sep=""),
         sep="/"  )
     # print(fname)
     plot_logcounts_hist(per.cell, dfx, dirx, fname, FALSE)
 
     fname = paste(out_dir, dirx,
         paste(out_prefix, name_prefix,
-              "-scater-qc-counts-logavg-hist.png", sep=""),
+              "-scater-qc-counts-logavg-hist.", image.option, sep=""),
         sep="/"  )
     # print(fname)
     plot_counts_logavg_hist(per.cell, dfx, dirx, fname, FALSE)
 
     fname = paste(out_dir, dirx,
         paste(out_prefix, name_prefix,
-          "-scater-qc-ngenes-hist.png", sep=""),
+          "-scater-qc-ngenes-hist.", image.option, sep=""),
         sep="/"  )
     plot_ngenes(per.cell, dirx, fname, FALSE)
 }
 
-filter_venn = function(filter.list, filter.names, fname){
+filter_venn = function(filter.list, filter.names,
+                       fname, image.option="png"){
     #print(fname)
     myCol <- brewer.pal(3, "Pastel2")
     venn.diagram(
@@ -546,10 +553,10 @@ filter_venn = function(filter.list, filter.names, fname){
             category.names = filter.names,
             filename = fname,
             output=TRUE,
-            imagetype="png" )
+            imagetype=image.option )
 }
 
-test = function(){
+test = function(image.option="png"){
     # Chart
     venn.diagram(
             x = filter.list,
@@ -558,7 +565,7 @@ test = function(){
             output=TRUE,
             
             # Output features
-            imagetype="png" ,
+            imagetype=image.option ,
             height = 480 , 
             width = 480 , 
             resolution = 300,
@@ -595,8 +602,8 @@ seurat_allqc_plot = function(data.dir,plot.prefix, plot.suffix){
     p2 = FeatureScatter(scrj, feature1 = "nCount_RNA", feature2 = "percent.mt")
     p3 = FeatureScatter(scrj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
     p4 = CombinePlots(plots = list(p2, p3))
-    ggsave(paste(plot.prefix, "/qcvln", plot.suffix, sep=""), p1)
-    ggsave(paste(plot.prefix, "/fscatter", plot.suffix, sep=""), p4, width=14, height=7)
+    ggsave(paste(plot.prefix, "/qcvln.", plot.suffix, sep=""), p1)
+    ggsave(paste(plot.prefix, "/fscatter.", plot.suffix, sep=""), p4, width=14, height=7)
 
     scrj = NormalizeData(scrj, normalization.method = "LogNormalize", scale.factor = 10000)
     scrj = FindVariableFeatures(scrj, selection.method = "vst", nfeatures = 2000)
@@ -604,13 +611,13 @@ seurat_allqc_plot = function(data.dir,plot.prefix, plot.suffix){
     p5 = VariableFeaturePlot(scrj)
     p6 = LabelPoints(plot = p5, points = top10, repel = TRUE)
     p7 = CombinePlots(plots = list(p5, p6))
-    ggsave(paste(plot.prefix, "/vfeat", plot.suffix, sep=""), p7, width=14, height=7)
+    ggsave(paste(plot.prefix, "/vfeat.", plot.suffix, sep=""), p7, width=14, height=7)
     all.genes = rownames(scrj)
     scrj = ScaleData(scrj) #, features = all.genes)
     paste("Data Scaled")
     scrj = RunPCA(scrj, features = VariableFeatures(object = scrj))
     p8 = DimPlot(scrj, reduction = "pca")
-    ggsave(paste(plot.prefix, "/pca", plot.suffix, sep=""), p8)
+    ggsave(paste(plot.prefix, "/pca.", plot.suffix, sep=""), p8)
 }
 
 seurat_fscatter = function(scrj, fname){
@@ -621,11 +628,12 @@ seurat_fscatter = function(scrj, fname){
     ggsave(fname, p4, width=14, height=7)
 }
 
-seurat_ba_qcplot = function(data.dir, all_thrs, dirx, out.dir, out.prefix, plot.suffix){
+seurat_ba_qcplot = function(data.dir, all_thrs, dirx, 
+                            out.dir, out.prefix, image.option="png"){
     scr.data = Read10X(data.dir = data.dir)
     scrj = CreateSeuratObject(counts = scr.data, project = data.dir)
     scrj[["percent.mcg"]] = PercentageFeatureSet(scrj, pattern = "^AT[MC]G")
-    fname = paste(out.dir, dirx, paste(out.prefix, "-seurat-before-qc.png", sep=""), 
+    fname = paste(out.dir, dirx, paste(out.prefix, "-seurat-before-qc.", image.option, sep=""), 
 		  sep="/"  )
     seurat_fscatter(scrj, fname)
 
@@ -645,7 +653,8 @@ seurat_ba_qcplot = function(data.dir, all_thrs, dirx, out.dir, out.prefix, plot.
     scrj2 = scrj1[, expr2 < mcg_threshold]
     print(scrj2)
 
-    fname = paste(out.dir, dirx, paste(out.prefix, "-seuerat-after-qc.png", sep=""), 
+    fname = paste(out.dir, dirx, paste(out.prefix, "-seuerat-after-qc.", 
+                                        image.option, sep=""), 
 		  sep="/"  )
     seurat_fscatter(scrj2, fname)
 }

@@ -3,7 +3,7 @@ source("plot_utils.R")
 
 
 apply_filter_dirs = function(out_dir, out_prefix, glist_file,
-                             in_base_dir, in_dirs){
+                             in_base_dir, in_dirs, image.option){
 
     cat("DIR", "NGENES", "NCELLS",
         "MCG_UB", "MCG_CELLS", "MCG_PCT",
@@ -26,7 +26,7 @@ apply_filter_dirs = function(out_dir, out_prefix, glist_file,
         nfeatures = dim(dfx)[1]
 
         plot_cells_hist(dfx, dx, "-before-drop",
-                        out_dir, out_prefix)
+                        out_dir, out_prefix, image.option)
 
         mcg_drop = mcg_cell_filter(dfx)
         ngenes_lb_drop = ngenes_cell_filter_lb(dfx)
@@ -58,7 +58,7 @@ apply_filter_dirs = function(out_dir, out_prefix, glist_file,
 
         feat_drop = avg_reads_feat_filter(dfx)
         dfx4 = dfx4[!feat_drop, ]
-        plot_cells_hist(dfx4, dx, "-after-all-drop-", out_dir, out_prefix)
+        plot_cells_hist(dfx4, dx, "-after-all-drop-", out_dir, out_prefix, image.option)
 
         cat(" ", sum(feat_drop), sum(feat_drop)*100/nfeatures)
         gnames = as.character(rownames(dfx4))
@@ -77,19 +77,34 @@ apply_filter_dirs = function(out_dir, out_prefix, glist_file,
         venn_fname = paste(out_dir, dx,
            paste(out_prefix, "-filter-venn.png", sep=""),
         sep="/"  )
-        filter_venn(filter_list, filter_names, venn_fname)
+        filter_venn(filter_list, filter_names, venn_fname image.option)
 
         cat("\n")
     }
 }
 
+qcwf_main(in_base_dir, data.file, glist_file, 
+          out_dir, out_prefix, image.option){
+    data.df = read.csv(data.file, header=TRUE, stringsAsFactors=FALSE)
+    expt.dir.paths = data.df$dir.paths
+    short.names = data.df$short.names
+    project.names = data.df$project.names
 
+    apply_filter_dirs(out_dir, out_prefix, glist_file,
+                      in_base_dir, expt.dir.paths, image.option)
+    
+}
 
 args = commandArgs(trailingOnly=TRUE)
-
-if(length(args) >= 4){
-    apply_filter_dirs(args[1], args[2], args[3], args[4], args[5:length(args)])
+cmd_usage = "Usage: Rscript qcfilter_workflow.R in_base_dir data_file gene_list outdir out_prefix png/pdf"
+if(length(args) >= 6){
+    if((args[6] == "png" || args[6] == "pdf")){
+        qcwf_main(args[1], args[2], args[3], args[4], args[5], args[6])
+    } else {
+        print(args)
+        print(cmd_usage)
+    }
 }  else {
     print(args)
-    print("Usage: Rscript qcfilter_workflow.R outdir out_prefix gene_list in_base_dir indir1 indir2 ...")
+    print(cmd_usage)
 }
