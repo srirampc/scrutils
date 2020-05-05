@@ -114,7 +114,9 @@ harmony_cluster = function(root.dir, data.file, out.dir,
         }
     }
     mkdf = FindAllMarkers(athaliana)
-    write.table(mkdf, paste(out.dir, "harmony-markers.tsv", sep="/"), 
+    write.table(mkdf, paste(out.dir, paste(vis.option, "-harmony-markers.tsv",
+					   sep=""),
+                      sep="/"), 
 		row.names=FALSE, sep="\t")
     athaliana
 }

@@ -79,7 +79,9 @@ seurat_cluster = function(root.dir, data.file, out.dir, qc.flag,
 					     "pca", 1:30, img.option)
     }
     mkdf = FindAllMarkers(athaliana.integrated)
-    write.table(mkdf, paste(out.dir, "seurat-markers.tsv", sep="/"), 
+    write.table(mkdf, paste(out.dir, paste(vis.option, "-seurat-markers.tsv", 
+					   sep=""),
+			    sep="/"), 
 		row.names=FALSE, sep="\t")
     athaliana.integrated
 }
