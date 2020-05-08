@@ -14,8 +14,8 @@ variance_plot = function(dfx, fname){
 }
 
 scran_normalize_dir = function(out_dir, out_prefix, 
-                        in_base_dir, dirx, 
-			plot=FALSE, image.option="png"){
+                            in_base_dir, dirx, 
+                            plot=FALSE, image.option="png"){
     rdx = paste(in_base_dir, dirx, sep="/")
     dfx = DropletUtils::read10xCounts(rdx)
     cat(dirx)
@@ -74,17 +74,38 @@ scran_main = function(in_base_dir, data.file,
     }
 }
 
-args = commandArgs(trailingOnly=TRUE)
-cmd_usage = "Usage:  Rscript scran_normalize.R in_base_dir data.file.csv out_dir out_prefix plot(TRE/FALSE) png/pdf"
+# Create a parser
+p <- arg_parser("Normalize with scran and generate variance plots")
 
-if(length(args) >= 6){
-    if((args[6] == "png" || args[6] == "pdf")){
-        scran_main(args[1], args[2], args[3], args[4], args[5], args[6])
-    } else {
-        print(args)
-        print(cmd_usage)
-    }
-}  else {
-    print(args)
-    print(cmd_usage)
+# Add command line arguments
+p <- add_argument(p, "root_dir", help="Root directory of datasets", type="character")
+p <- add_argument(p, "data_file_csv", 
+                  help="CSV file with dataset info (See ath.control.csv for example)",
+                  type="character")
+p <- add_argument(p, "out_dir", help="Output directory", type="character")
+p <- add_argument(p, "out_prefix", help="Output Prefix", type="character")
+p <- add_argument(p, "--plot", help="Flag if generate plots or not TRUE/FALSE (default: TRUE)", short='-p', default=TRUE)
+p <- add_argument(p, "--img", help="Output image option should be one png/pdf (default:png)", short='-g', default='png')
+
+if(!(argv$img == "png" || argv$img == "pdf")) {
+    scran_main(argv$in_base_dir, argv$data_file_csv, argv$out_dir, argv$out_prefix, argv$plot, argv$img)
+} else {
+    print("Invalid image option.")
+    print.arg.parser()
 }
+
+
+# args = commandArgs(trailingOnly=TRUE)
+# cmd_usage = "Usage:  Rscript scran_normalize.R in_base_dir data.file.csv out_dir out_prefix plot(TRE/FALSE) png/pdf"
+
+# if(length(args) >= 6){
+#     if((args[6] == "png" || args[6] == "pdf")){
+#         scran_main(args[1], args[2], args[3], args[4], args[5], args[6])
+#     } else {
+#         print(args)
+#         print(cmd_usage)
+#     }
+# }  else {
+#     print(args)
+#     print(cmd_usage)
+# }

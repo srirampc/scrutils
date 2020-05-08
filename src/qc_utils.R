@@ -101,17 +101,34 @@ apply_gene_filters = function(dfx){
     dfx[!feat_drop, ]
 }
 
-qc_normalize = function(expt.full.dir.path){
+qc_normalize = function(expt.full.dir.path, 
+                        include_genes_file,
+                        exclude_genes_file){
     dfx = read10xCounts(expt.full.dir.path)
     dfx = apply_cell_filters(dfx)
     dfx = apply_gene_filters(dfx)
     print(dfx)
     dfx = scran_normalize(dfx)
+    if(!is.null(include_genes_file)) {
+        inc_df = read.table(include_genes_file, 
+            header=TRUE, stringsAsFactors=FALSE)
+        inc_flag = (gnames %in% inc_df[,'ID'])
+        dfx = dfx[inc_flag, ]
+    }
+    if(!is.null(exclude_genes_file)) {
+        exc_df = read.table(exclude_genes_file, header=TRUE, stringsAsFactors=FALSE)
+        exc_drop = !(gnames %in% exc_df[,'ID'])
+        dfx = dfx[inc_flag, ]
+    }
     dfx
 }
 
-qc_normalize_matrix = function(expt.full.dir.path){
-    dfx = qc_normalize(expt.full.dir.path)
+qc_normalize_matrix = function(expt.full.dir.path,
+                               include_genes_file,
+                               exclude_genes_file){
+    dfx = qc_normalize(expt.full.dir.path,
+                       include_genes_file,
+                       exclude_genes_file)
     ctmtx = counts(dfx)
     print(dim(ctmtx))
     rownames(ctmtx) = rownames(dfx)

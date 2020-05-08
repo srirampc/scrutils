@@ -1,4 +1,5 @@
-library(Seurat)
+library(argparser, quietly=TRUE)
+library(Seurat, quietly=TRUE)
 source("qc_utils.R")
 source("plot_utils.R")
 source("data_utils.R")
@@ -50,7 +51,8 @@ combined_tsne = function(athaliana, out.dir, reduce_by="pca",
 }
 
 seurat_cluster = function(root.dir, data.file, out.dir, qc.flag,
-			  vis.option, img.option){
+			              vis.option, img.option, include_genes_file,
+                          exec_list_file){
     data.df = read.csv(data.file, header=TRUE, stringsAsFactors=FALSE)
     expt.dir.paths = data.df$dir.paths
     short.names = data.df$short.names
@@ -58,7 +60,8 @@ seurat_cluster = function(root.dir, data.file, out.dir, qc.flag,
 
     athaliana.sobj = if(as.logical(qc.flag)){
         qcload_10X_seurat_objects(root.dir, expt.dir.paths, project.names, 
- 				  short.names, qc_normalize_matrix)
+                    short.names, qc_normalize_matrix,
+                    include_genes_file, exclude_genes_file)
     } else {
         load_10X_seurat_objects(root.dir, expt.dir.paths,
                                 project.names, short.names)
@@ -86,17 +89,48 @@ seurat_cluster = function(root.dir, data.file, out.dir, qc.flag,
     athaliana.integrated
 }
 
-args = commandArgs(trailingOnly=TRUE)
-cmd_usage = "Usage: Rscript seurat_cluster.R root_dir data.file.csv out_dir qc_flag tnse/umap png/pdf"
-if(length(args) >= 6){
-    if((args[5] == "tsne" || args[5] == "umap") && 
-       (args[6] == "png" || args[6] == "pdf")){
-        seurat_cluster(args[1], args[2], args[3], args[4], args[5], args[6])
-    } else {
-        print(args)
-        print(cmd_usage)
-    }
-}  else {
-    print(args)
-    print(cmd_usage)
+# Create a parser
+p <- arg_parser("Pre-process, Normalize, Integrate w. Seurat and cluster")
+
+# Add command line arguments
+p <- add_argument(p, "root_dir", help="Root directory of datasets", type="character")
+p <- add_argument(p, "data_file_csv", 
+                  help="CSV file with dataset info (See ath.control.csv for example)",
+                  type="character")
+p <- add_argument(p, "out_dir", help="Output directory", type="character")
+p <- add_argument(p, "--qc", help="Flag to indicate to preform qc", short='-q', default=TRUE)
+p <- add_argument(p, "--vis", help="Visualization option should be tsne/umap (default:umap)", short='-v', default='umap')
+p <- add_argument(p, "--img", help="Output image option should be one png/pdf (default:png)", short='-g', default='png')
+p <- add_argument(p, "--exc", help="File containing list of inc. genes (default:None)", short='-e', default=NULL)
+p <- add_argument(p, "--inc", help="File containing list of exc. genes (default:None)", short='-i', default=NULL)
+
+# Parse the command line arguments
+argv <- parse_args(p)
+
+if(!((argv$vis == "tsne" || argv$vis == "umap") && 
+     (argv$img == "png" || argv$img == "pdf"))) {
+         seurat_cluster(argv$root_dir, argv$data_file_csv,
+                argv$out_dir, argv$qc, argv$vis, argv$img, 
+                argv$inc, argv$exec)
+    
+} else {
+    print("Invalid image/visualization option.")
+    print.arg.parser()
 }
+
+
+
+# args = commandArgs(trailingOnly=TRUE)
+# cmd_usage = "Usage: Rscript seurat_cluster.R root_dir data.file.csv out_dir qc_flag tnse/umap png/pdf"
+# if(length(args) >= 6){
+#     if((args[5] == "tsne" || args[5] == "umap") && 
+#        (args[6] == "png" || args[6] == "pdf")){
+#         seurat_cluster(args[1], args[2], args[3], args[4], args[5], args[6])
+#     } else {
+#         print(args)
+#         print(cmd_usage)
+#     }
+# }  else {
+#     print(args)
+#     print(cmd_usage)
+# }

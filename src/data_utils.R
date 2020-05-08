@@ -1,7 +1,7 @@
 
-library(Seurat)
-library(harmony)
-library(stringr)
+library(Seurat, quietly=TRUE)
+library(harmony, quietly=TRUE)
+library(stringr, quietly=TRUE)
 
 load_10X_matrices = function(base.dir, dir.paths, data.names) {
     mat10x.list = lapply(1:length(dir.paths),
@@ -113,7 +113,8 @@ cluster_tsne_seurat = function(data.obj, reduce_by, resolution=0.5, dims=1:20){
     data.obj
 }
 
-qcload_10X_matrices = function(base.dir, dir.paths, data.names, qc.function) {
+qcload_10X_matrices = function(base.dir, dir.paths, data.names, qc.function,
+                               inc_list_file, exec_list_file) {
     mat10x.list = lapply(1:length(dir.paths),
         function(i){
             # dfx = qc_normalize(paste(base.dir, dir.paths[i], sep="/"))
@@ -122,7 +123,8 @@ qcload_10X_matrices = function(base.dir, dir.paths, data.names, qc.function) {
             # rownames(ctmtx) = rownames(dfx)
             # colnames(ctmtx) = 1:dim(dfx)[2]
             # ctmtx
-            qc.function(paste(base.dir, dir.paths[i], sep="/"))
+            qc.function(paste(base.dir, dir.paths[i], sep="/"),
+                        inc_list_file, exec_list_file)
     })
     names(mat10x.list) = data.names
     print(sapply(mat10x.list, dim))
@@ -142,12 +144,15 @@ qcload_10X_matrices = function(base.dir, dir.paths, data.names, qc.function) {
 
 
 qcload_10X_seurat_objects = function(base.dir, dir.paths, data.names, 
-                                     short.names, qc.function, dim.name="dataset",
-				     min.cells = 3, min.feats=200, nfeats=2000) {
+                                     short.names, qc.function,
+                                     inc_list_file, exec_list_file,
+                                     dim.name="dataset", nfeats=2000,
+				                     min.cells = 2, min.feats=200) {
 
     mat10X.sobjects = lapply(1:length(dir.paths),
         function(i){
-            cmatx = qc.function(paste(base.dir, dir.paths[i], sep="/"))
+            cmatx = qc.function(paste(base.dir, dir.paths[i], sep="/"),
+                                inc_list_file, exec_list_file)
             colnames(cmatx) = str_c(short.names[i], 1:dim(cmatx)[2], sep="_")
             sobj = CreateSeuratObject(counts = cmatx,
                 project = data.names[i],
