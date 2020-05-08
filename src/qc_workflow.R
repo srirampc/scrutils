@@ -5,7 +5,7 @@ source("plot_utils.R")
 
 apply_filter_dirs = function(out_dir, out_prefix, in_base_dir,
                              in_dirs, image_option,
-                             inc_file, exec_file){
+                             inc_file, exc_file){
 
     cat("DIR", "NGENES", "NCELLS",
         "MCG_UB", "MCG_CELLS", "MCG_PCT",
@@ -15,12 +15,16 @@ apply_filter_dirs = function(out_dir, out_prefix, in_base_dir,
         # "MCGNG_CELLS", "MCGNG_PCT",
         # "ALLLB_CELLS", "ALLLB_PCT",
         "ALL_CELLS", "ALL_PCT",
-        "FEAT_FILT", "FEAT_PCT",
-        "CODING_FILT", "CODING_PCT",
-        "NGENES_FINAL", "NCELLS_FINAL",
-        "\n")
-    gdf = read.table(inc_file, header=TRUE, stringsAsFactors=FALSE)
-    pdf = read.table(exec_file, header=TRUE, stringsAsFactors=FALSE)
+        "FEAT_FILT", "FEAT_PCT")
+
+    if(!is.null(inc_file) && !is.na(inc_file)) 
+        cat(" ", "CODING_FILT", "CODING_PCT")
+
+    if(!is.null(exc_file) && !is.na(exc_file)) 
+        cat(" ", "PROTOPLAST_FILT", "PROTOPLAST_PCT")
+
+    cat(" ", "NGENES_FINAL", "NCELLS_FINAL", "\n")
+
     for(dx in in_dirs){
         dirx = paste(in_base_dir, dx, sep="/")
         dfx = read10xCounts(dirx)
@@ -67,14 +71,20 @@ apply_filter_dirs = function(out_dir, out_prefix, in_base_dir,
         gnames = as.character(rownames(dfx4))
         #print(gnames[1:4])
         #print(gdf$name[1:4])
-        coding_drop = !(gnames %in% gdf$ID)
-        dfx4 = dfx4[!coding_drop, ]
-        cat(" ", sum(coding_drop), sum(coding_drop)*100/nfeatures)
-        cat(" ", dim(dfx4)[1], dim(dfx4)[2])
 
-        protoplast_drop = (gnames %in% pdf$ID)
-        dfx4 = dfx4[!protoplast_drop, ]
-        cat(" ", sum(protoplast_drop), sum(protoplast_drop)*100/nfeatures)
+        if(!is.null(inc_file) && !is.na(inc_file)) {
+          gdf = read.table(inc_file, header=TRUE, stringsAsFactors=FALSE)
+          coding_drop = !(gnames %in% gdf$ID)
+          dfx4 = dfx4[!coding_drop, ]
+          cat(" ", sum(coding_drop), sum(coding_drop)*100/nfeatures)
+	}
+
+        if(!is.null(exc_file) && !is.na(exc_file)) {
+          pdf = read.table(exc_file, header=TRUE, stringsAsFactors=FALSE)
+          protoplast_drop = (gnames %in% pdf$ID)
+          dfx4 = dfx4[!protoplast_drop, ]
+          cat(" ", sum(protoplast_drop), sum(protoplast_drop)*100/nfeatures)
+	}
         cat(" ", dim(dfx4)[1], dim(dfx4)[2])
 
         ncell_list = 1:nlength
@@ -113,32 +123,21 @@ p <- add_argument(p, "data_file_csv",
                   type="character")
 p <- add_argument(p, "out_dir", help="Output directory", type="character")
 p <- add_argument(p, "out_prefix", help="Output Prefix", type="character")
-p <- add_argument(p, "--img", help="Output image option should be one png/pdf (default:png)", short='-g', default='png')
-p <- add_argument(p, "--exc", help="File containing list of inc. genes (default:None)", short='-e', default=NULL)
-p <- add_argument(p, "--inc", help="File containing list of exc. genes (default:None)", short='-i', default=NULL)
+p <- add_argument(p, "--img", 
+                  help="Output image option should be one png/pdf (default:png)", short='-g', default='png')
+p <- add_argument(p, "--exc", help="File containing list of genes to be included eg. protien coding (default:None)", short='-e', default=NULL)
+p <- add_argument(p, "--inc", help="File containing list of genes to be excluded eg. protoplast (default:None)", short='-i', default=NULL)
 
 # Parse the command line arguments
 argv <- parse_args(p)
 
-if(!(argv$img == "png" || argv$img == "pdf")) {
-    seurat_cluster(argv$root_dir, argv$data_file_csv,
+if(argv$img == "png" || argv$img == "pdf") {
+	print(argv$inc)
+    qcwf_main(argv$root_dir, argv$data_file_csv,
         argv$out_dir, argv$out_prefix,  
-        argv$img, argv$inc, argv$exec)    
+        argv$img, argv$inc, argv$exc)    
 } else {
     print("Invalid image option.")
-    print.arg.parser()
+    print(p)
 }
 
-# args = commandArgs(trailingOnly=TRUE)
-# cmd_usage = "Usage: Rscript qcfilter_workflow.R in_base_dir data_file gene_list outdir out_prefix png/pdf"
-# if(length(args) >= 6){
-#     if((args[6] == "png" || args[6] == "pdf")){
-#         qcwf_main(args[1], args[2], args[3], args[4], args[5], args[6])
-#     } else {
-#         print(args)
-#         print(cmd_usage)
-#     }
-# }  else {
-#     print(args)
-#     print(cmd_usage)
-# }

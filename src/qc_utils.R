@@ -1,9 +1,9 @@
-library(scater)
-library(DropletUtils)
-library(Seurat)
-library(ggplot2)
+library(scater, quietly=T)
+library(DropletUtils, quietly=T)
+library(Seurat, quietly=T)
+library(ggplot2, quietly=T)
 
-mcg_cell_filter = function(dfx){
+mcg_cell_filter = function(dfx, print=T){
     per.cell = perCellQCMetrics(dfx, 
         subset=list(MCG=grep("AT[MC]G",
                         rownames(dfx))))
@@ -15,11 +15,11 @@ mcg_cell_filter = function(dfx){
     mcg_med = median(log_mcg)
     mcg_3madsp = mcg_med + 3 * mcg_mad
     mcg_threshold = min(5, 10^mcg_3madsp)
-    cat(" ", mcg_threshold)
+    if (print) cat(" ", mcg_threshold)
     (mcgpct > mcg_threshold)
 }
 
-ngenes_cell_filter_lb = function(dfx){
+ngenes_cell_filter_lb = function(dfx, print=T){
     per.cell = perCellQCMetrics(dfx, 
         subset=list(MCG=grep("AT[MC]G",
                         rownames(dfx))))
@@ -28,11 +28,11 @@ ngenes_cell_filter_lb = function(dfx){
     ngenes_mad = mad(log_ngenes)
     ngenes_med = median(log_ngenes)
     ngenes_1mads = ngenes_med -  ngenes_mad
-    cat(" ", 10^ngenes_1mads)
+    if(print) cat(" ", 10^ngenes_1mads)
     (log_ngenes < ngenes_1mads)
 }
 
-ngenes_cell_filter_ub = function(dfx){
+ngenes_cell_filter_ub = function(dfx, print=T){
     per.cell = perCellQCMetrics(dfx, 
         subset=list(MCG=grep("AT[MC]G",
                         rownames(dfx))))
@@ -41,11 +41,11 @@ ngenes_cell_filter_ub = function(dfx){
     ngenes_mad = mad(log_ngenes)
     ngenes_med = median(log_ngenes)
     ngenes_3madsp = ngenes_med + (3*ngenes_mad)
-    cat(" ", 10^ngenes_3madsp)
+    if(print) cat(" ", 10^ngenes_3madsp)
     (log_ngenes > ngenes_3madsp)
 }
 
-logcounts_cell_filter = function(dfx){
+logcounts_cell_filter = function(dfx, print=T){
     per.cell = perCellQCMetrics(dfx, 
         subset=list(MCG=grep("AT[MC]G",
                         rownames(dfx))))
@@ -54,11 +54,11 @@ logcounts_cell_filter = function(dfx){
     lsize_mad = mad(log_libsize)
     lsize_med = median(log_libsize)
     lsize_1mads = lsize_med - lsize_mad
-    cat(" ", 10^lsize_1mads)
+    if(print) cat(" ", 10^lsize_1mads)
     (log_libsize < lsize_1mads)
 }
 
-avgcounts_cell_filter = function(dfx){
+avgcounts_cell_filter = function(dfx, print=T){
     per.cell = perCellQCMetrics(dfx, 
         subset=list(MCG=grep("AT[MC]G",
                         rownames(dfx))))
@@ -67,11 +67,11 @@ avgcounts_cell_filter = function(dfx){
     lmean_mad = mad(log_libmean)
     lmean_med = median(log_libmean)
     lmean_1mads = lmean_med - lmean_mad
-    cat(" ", 10^lmean_1mads)
+    if (print) cat(" ", 10^lmean_1mads)
     (log_libmean < lmean_1mads)
 }
 
-avg_reads_feat_filter = function(dfx){
+avg_reads_feat_filter = function(dfx, print=T){
     per.feat = perFeatureQCMetrics(dfx)
     featavg = per.feat$mean 
     log_featavg = log10(featavg)
@@ -82,22 +82,23 @@ avg_reads_feat_filter = function(dfx){
     xrngcts =xhist$counts[xrange]
     xrngmids = xhist$mids[xrange]
     xrnmidv = xrngmids[which.min(xrngcts)]
+    if (print) cat(" ", 10^xrnmidv)
     (log_featavg <= xrnmidv)
 }
 
 
-apply_cell_filters = function(dfx){
-    mcg_drop = mcg_cell_filter(dfx)
-    ngenes_lb_drop = ngenes_cell_filter_lb(dfx)
-    ngenes_ub_drop = ngenes_cell_filter_ub(dfx)
-    #avgcts_drop = avgcounts_cell_filter(dfx)
-    logcts_drop = logcounts_cell_filter(dfx)
+apply_cell_filters = function(dfx, print=T){
+    mcg_drop = mcg_cell_filter(dfx, print)
+    ngenes_lb_drop = ngenes_cell_filter_lb(dfx, print)
+    ngenes_ub_drop = ngenes_cell_filter_ub(dfx, print)
+    #avgcts_drop = avgcounts_cell_filter(dfx, print)
+    logcts_drop = logcounts_cell_filter(dfx, print)
     all_drop = mcg_drop | ngenes_lb_drop | ngenes_ub_drop | logcts_drop
     dfx[,!all_drop]
 }
 
-apply_gene_filters = function(dfx){
-    feat_drop = avg_reads_feat_filter(dfx)
+apply_gene_filters = function(dfx, print=T){
+    feat_drop = avg_reads_feat_filter(dfx, print)
     dfx[!feat_drop, ]
 }
 
@@ -105,21 +106,22 @@ qc_normalize = function(expt.full.dir.path,
                         include_genes_file,
                         exclude_genes_file){
     dfx = read10xCounts(expt.full.dir.path)
-    dfx = apply_cell_filters(dfx)
-    dfx = apply_gene_filters(dfx)
-    print(dfx)
-    dfx = scran_normalize(dfx)
-    if(!is.null(include_genes_file)) {
+    dfx = apply_cell_filters(dfx, F)
+    dfx = apply_gene_filters(dfx, F)
+    #print(dfx)
+    gnames = as.character(rownames(dfx))
+    if(!is.null(include_genes_file) && !is.na(include_genes_file)) {
         inc_df = read.table(include_genes_file, 
             header=TRUE, stringsAsFactors=FALSE)
         inc_flag = (gnames %in% inc_df[,'ID'])
         dfx = dfx[inc_flag, ]
     }
-    if(!is.null(exclude_genes_file)) {
+    if(!is.null(exclude_genes_file) && !is.na(exclude_genes_file)) {
         exc_df = read.table(exclude_genes_file, header=TRUE, stringsAsFactors=FALSE)
         exc_drop = !(gnames %in% exc_df[,'ID'])
         dfx = dfx[inc_flag, ]
     }
+    dfx = scran_normalize(dfx)
     dfx
 }
 

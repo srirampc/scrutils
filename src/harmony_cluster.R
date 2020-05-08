@@ -142,29 +142,14 @@ p <- add_argument(p, "--inc", help="File containing list of exc. genes (default:
 # Parse the command line arguments
 argv <- parse_args(p)
 
-if(!((argv$vis == "tsne" || argv$vis == "umap") && 
-     (argv$img == "png" || argv$img == "pdf"))) {
+if((argv$vis == "tsne" || argv$vis == "umap") && 
+   (argv$img == "png" || argv$img == "pdf")) {
          harmony_cluster(argv$root_dir, argv$data_file_csv,
                 argv$out_dir, argv$qc, argv$vis, argv$img, 
                 argv$inc, argv$exec)
     
 } else {
     print("Invalid image/visualization option.")
-    print.arg.parser()
+    print(p)
 }
-
-# args = commandArgs(trailingOnly=TRUE)
-# cmd_usage = "Usage: Rscript harmony_cluster.R root_dir data.file.csv out_dir qc_flag tnse/umap png/pdf"
-# if(length(args) >= 6){
-#     if((args[5] == "tsne" || args[5] == "umap") && 
-#        (args[6] == "png" || args[6] == "pdf")){
-#         harmony_cluster(args[1], args[2], args[3], args[4], args[5], args[6])
-#     } else {
-#         print(args)
-#         print(cmd_usage)
-#     }
-# }  else {
-#     print(args)
-#     print(cmd_usage)
-# }
 

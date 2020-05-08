@@ -1,12 +1,12 @@
-library(scater)
-library(DropletUtils)
-library(RColorBrewer)
-library(VennDiagram)
-library(Seurat)
-library(ggplot2)
+library(scater, quietly=T)
+library(DropletUtils,quietly=T)
+library(RColorBrewer, quietly=T)
+library(VennDiagram, quietly=T)
+library(Seurat, quietly=T)
+library(ggplot2, quietly=T)
 
 qcstat_dir = function(dirx){
-    dfx = read10xCounts(dirx)
+    dfx =  read10xCounts(dirx)
     per.cell = perCellQCMetrics(dfx, 
         subset=list(MCG=grep("AT[MC]G",
                         rownames(dfx))))
@@ -593,7 +593,7 @@ test = function(image.option="png"){
 }
 
 
-seurat_allqc_plot = function(data.dir,plot.prefix, plot.suffix){
+seurat_allqc_plot = function(data.dir, out.dir, out.prefix, img.option){
     scr.data = Read10X(data.dir = data.dir)
     scrj = CreateSeuratObject(counts = scr.data, project = "SCRNA",
                     min.cells = 3, min.features = 200)
@@ -602,8 +602,9 @@ seurat_allqc_plot = function(data.dir,plot.prefix, plot.suffix){
     p2 = FeatureScatter(scrj, feature1 = "nCount_RNA", feature2 = "percent.mt")
     p3 = FeatureScatter(scrj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
     p4 = CombinePlots(plots = list(p2, p3))
-    ggsave(paste(plot.prefix, "/qcvln.", plot.suffix, sep=""), p1)
-    ggsave(paste(plot.prefix, "/fscatter.", plot.suffix, sep=""), p4, width=14, height=7)
+    qfname = paste(out.dir, "/", out.prefix, "qcvln.", img.option, sep="")
+    ggsave(qfname, p1)
+    ggsave(paste(out.dir, "/", out.prefix," fscatter.", img.option, sep=""), p4, width=14, height=7)
 
     scrj = NormalizeData(scrj, normalization.method = "LogNormalize", scale.factor = 10000)
     scrj = FindVariableFeatures(scrj, selection.method = "vst", nfeatures = 2000)
@@ -611,13 +612,13 @@ seurat_allqc_plot = function(data.dir,plot.prefix, plot.suffix){
     p5 = VariableFeaturePlot(scrj)
     p6 = LabelPoints(plot = p5, points = top10, repel = TRUE)
     p7 = CombinePlots(plots = list(p5, p6))
-    ggsave(paste(plot.prefix, "/vfeat.", plot.suffix, sep=""), p7, width=14, height=7)
+    ggsave(paste(out.dir, "/", out.prefix, "vfeat.", img.option, sep=""), p7, width=14, height=7)
     all.genes = rownames(scrj)
     scrj = ScaleData(scrj) #, features = all.genes)
-    paste("Data Scaled")
+    paste("Data Scaled \n")
     scrj = RunPCA(scrj, features = VariableFeatures(object = scrj))
     p8 = DimPlot(scrj, reduction = "pca")
-    ggsave(paste(plot.prefix, "/pca.", plot.suffix, sep=""), p8)
+    ggsave(paste(out.dir, "/", out.prefix, "pca.", img.option, sep=""), p8)
 }
 
 seurat_fscatter = function(scrj, fname){
@@ -651,7 +652,7 @@ seurat_ba_qcplot = function(data.dir, all_thrs, dirx,
     scrj1 = scrj[, expr1 > 200]
     expr2 = FetchData(object=scrj1, vars="percent.mcg")
     scrj2 = scrj1[, expr2 < mcg_threshold]
-    print(scrj2)
+    #print(scrj2)
 
     fname = paste(out.dir, dirx, paste(out.prefix, "-seuerat-after-qc.", 
                                         image.option, sep=""), 

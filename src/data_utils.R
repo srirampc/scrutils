@@ -55,7 +55,7 @@ integrate_seurat_objects = function(athaliana.sobj, ndims = 1:30){
 
 
 combined_seurat_object = function(data.mlist, short.names, dim_name="dataset",
-				  nfeat=2000, mincells=5, npcs=20) {
+                                  nfeat=2000, mincells=5, npcs=20) {
     data.cnames = lapply(1:length(data.mlist), 
                 function(i){
                     c(rep(short.names[i], ncol(data.mlist[[i]])))
@@ -114,7 +114,7 @@ cluster_tsne_seurat = function(data.obj, reduce_by, resolution=0.5, dims=1:20){
 }
 
 qcload_10X_matrices = function(base.dir, dir.paths, data.names, qc.function,
-                               inc_list_file, exec_list_file) {
+                               inc_list_file, exc_list_file) {
     mat10x.list = lapply(1:length(dir.paths),
         function(i){
             # dfx = qc_normalize(paste(base.dir, dir.paths[i], sep="/"))
@@ -123,8 +123,9 @@ qcload_10X_matrices = function(base.dir, dir.paths, data.names, qc.function,
             # rownames(ctmtx) = rownames(dfx)
             # colnames(ctmtx) = 1:dim(dfx)[2]
             # ctmtx
+            cat("Loading ", dir.paths[i], "...\n")
             qc.function(paste(base.dir, dir.paths[i], sep="/"),
-                        inc_list_file, exec_list_file)
+                        inc_list_file, exc_list_file)
     })
     names(mat10x.list) = data.names
     print(sapply(mat10x.list, dim))
@@ -138,21 +139,24 @@ qcload_10X_matrices = function(base.dir, dir.paths, data.names, qc.function,
     for(i in 1:length(mat10x.list)){
         mat10x.list[[i]] = mat10x.list[[i]][common.gene.names,]
     }
-    print(sapply(mat10x.list, dim))
+    cat("Matrix Objects loaded for all datasets",
+        sapply(mat10x.list, dim) ,"\n")
+
     mat10x.list
 }
 
 
 qcload_10X_seurat_objects = function(base.dir, dir.paths, data.names, 
                                      short.names, qc.function,
-                                     inc_list_file, exec_list_file,
+                                     inc_list_file, exc_list_file,
                                      dim.name="dataset", nfeats=2000,
-				                     min.cells = 2, min.feats=200) {
+		                     min.cells = 2, min.feats=200) {
 
     mat10X.sobjects = lapply(1:length(dir.paths),
         function(i){
+            cat("Loading ", dir.paths[i], "...\n")
             cmatx = qc.function(paste(base.dir, dir.paths[i], sep="/"),
-                                inc_list_file, exec_list_file)
+                                inc_list_file, exc_list_file)
             colnames(cmatx) = str_c(short.names[i], 1:dim(cmatx)[2], sep="_")
             sobj = CreateSeuratObject(counts = cmatx,
                 project = data.names[i],
@@ -164,6 +168,6 @@ qcload_10X_seurat_objects = function(base.dir, dir.paths, data.names,
             sobj@meta.data[dim.name] <- c(rep(short.names[i], ncol(cmatx)))
             sobj
         })
-    cat("Objects loaded")
+    cat("Seurat Objects loaded for all datasets\n")
     mat10X.sobjects
 }
