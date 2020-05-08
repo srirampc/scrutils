@@ -52,7 +52,8 @@ combined_tsne = function(athaliana, out.dir, reduce_by="pca",
 
 seurat_cluster = function(root.dir, data.file, out.dir, qc.flag,
                           vis.option, img.option, include_genes_file,
-                          exclude_genes_file){
+                          exclude_genes_file,
+                          gen_markers, dot_markers_file)){
     data.df = read.csv(data.file, header=TRUE, stringsAsFactors=FALSE)
     expt.dir.paths = data.df$dir.paths
     short.names = data.df$short.names
@@ -81,11 +82,24 @@ seurat_cluster = function(root.dir, data.file, out.dir, qc.flag,
         athaliana.integrated = combined_tsne(athaliana.integrated, out.dir, 
                          "pca", 1:30, img.option)
     }
-    mkdf = FindAllMarkers(athaliana.integrated)
-    write.table(mkdf, paste(out.dir, paste(vis.option, "-seurat-markers.tsv", 
-                            sep=""),
-                sep="/"), 
-                row.names=FALSE, sep="\t")
+    if(gen_markers) {
+        mkdf = FindAllMarkers(athaliana.integrated)
+        write.table(mkdf, paste(out.dir, paste(vis.option, "-seurat-markers.tsv", 
+                                sep=""),
+                    sep="/"), 
+                    row.names=FALSE, sep="\t")
+    }
+
+    if(!is.na(dot_markers_file)){
+        gdf = read.table(dot_markers_file, sep="\t")
+        genes.plot = gdf$ID
+        dot_fname = paste(out.dir, 
+                        paste("dot-markers-seurat.", img.option, sep=""), 
+                       sep="/")
+        p = DotPlot(athaliana, genes.plot)
+        ggsave(dot_fname, px, width=10, height=4)
+    }
+
     athaliana.integrated
 }
 
@@ -103,6 +117,8 @@ p <- add_argument(p, "--vis", help="Visualization option should be tsne/umap (de
 p <- add_argument(p, "--img", help="Output image option should be one png/pdf (default:png)", short='-g', default='png')
 p <- add_argument(p, "--exc", help="File containing list of inc. genes (default:None)", short='-e', default=NULL)
 p <- add_argument(p, "--inc", help="File containing list of exc. genes (default:None)", short='-i', default=NULL)
+p <- add_argument(p, "--gen_markers", help="Flag to indicate to genreate all markers", short='-m', default=FALSE)
+p <- add_argument(p, "--dot_markers", help="Generate dot plot for markers", short='-d', default=NULL)
 
 # Parse the command line arguments
 argv <- parse_args(p)
@@ -111,7 +127,8 @@ if((argv$vis == "tsne" || argv$vis == "umap") &&
    (argv$img == "png" || argv$img == "pdf")) {
          seurat_cluster(argv$root_dir, argv$data_file_csv,
                 argv$out_dir, argv$qc, argv$vis, argv$img, 
-                argv$inc, argv$exc)
+                argv$inc, argv$exc,
+                argv$gen_markers, argv$dot_markers)
     
 } else {
     print("Invalid image/visualization option.")
