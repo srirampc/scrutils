@@ -47,9 +47,10 @@ load_10X_seurat_objects = function(base.dir, dir.paths, data.names,
 }
 
 
-integrate_seurat_objects = function(athaliana.sobj, ndims = 1:30){
+integrate_seurat_objects = function(athaliana.sobj, anc.feat, ndims = 1:30){
     athaliana.anchors = FindIntegrationAnchors(
-        object.list = athaliana.sobj, dims = ndims)
+        object.list = athaliana.sobj, anchor.features=anc.feat,
+        dims = ndims)
     IntegrateData(anchorset = athaliana.anchors, dims = ndims)
 }
 

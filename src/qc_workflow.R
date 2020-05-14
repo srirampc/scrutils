@@ -68,23 +68,24 @@ apply_filter_dirs = function(out_dir, out_prefix, in_base_dir,
         plot_cells_hist(dfx4, dx, "-after-all-drop-", out_dir, out_prefix, image_option)
 
         cat(" ", sum(feat_drop), sum(feat_drop)*100/nfeatures)
-        gnames = as.character(rownames(dfx4))
         #print(gnames[1:4])
         #print(gdf$name[1:4])
 
         if(!is.null(inc_file) && !is.na(inc_file)) {
+          gnames = as.character(rownames(dfx4))
           gdf = read.table(inc_file, header=TRUE, stringsAsFactors=FALSE)
           coding_drop = !(gnames %in% gdf$ID)
           dfx4 = dfx4[!coding_drop, ]
           cat(" ", sum(coding_drop), sum(coding_drop)*100/nfeatures)
-	}
+	    }
 
         if(!is.null(exc_file) && !is.na(exc_file)) {
+          gnames = as.character(rownames(dfx4))
           pdf = read.table(exc_file, header=TRUE, stringsAsFactors=FALSE)
           protoplast_drop = (gnames %in% pdf$ID)
           dfx4 = dfx4[!protoplast_drop, ]
           cat(" ", sum(protoplast_drop), sum(protoplast_drop)*100/nfeatures)
-	}
+	    }
         cat(" ", dim(dfx4)[1], dim(dfx4)[2])
 
         ncell_list = 1:nlength

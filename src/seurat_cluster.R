@@ -53,7 +53,7 @@ combined_tsne = function(athaliana, out.dir, reduce_by="pca",
 seurat_cluster = function(root.dir, data.file, out.dir, qc.flag,
                           vis.option, img.option, include_genes_file,
                           exclude_genes_file,
-                          gen_markers, dot_markers_file)){
+                          gen_markers, dot_markers_file) {
     data.df = read.csv(data.file, header=TRUE, stringsAsFactors=FALSE)
     expt.dir.paths = data.df$dir.paths
     short.names = data.df$short.names
@@ -68,8 +68,9 @@ seurat_cluster = function(root.dir, data.file, out.dir, qc.flag,
                                 project.names, short.names)
     }
 
-    athaliana.integrated = integrate_seurat_objects(athaliana.sobj)
+    athaliana.integrated = integrate_seurat_objects(athaliana.sobj, 16000)
     DefaultAssay(athaliana.integrated) <- "integrated"
+    print(athaliana.integrated)
 
     # Run the standard workflow for visualization and clustering
     athaliana.integrated <- ScaleData(athaliana.integrated, verbose = FALSE)
@@ -91,13 +92,24 @@ seurat_cluster = function(root.dir, data.file, out.dir, qc.flag,
     }
 
     if(!is.na(dot_markers_file)){
-        gdf = read.table(dot_markers_file, sep="\t")
-        genes.plot = gdf$ID
-        dot_fname = paste(out.dir, 
-                        paste("dot-markers-seurat.", img.option, sep=""), 
-                       sep="/")
-        p = DotPlot(athaliana, genes.plot)
-        ggsave(dot_fname, px, width=10, height=4)
+        mdf = read.table(dot_markers_file, stringsAsFactors=F, sep="\t")
+        for(dxf in mdf$V1){
+          gdf = read.table(dxf, header=T, 
+                           sep="\t", stringsAsFactors=F)
+          genes.plot = gdf$ID
+          pfx = gsub("\\.tsv", "" , basename(dxf))
+          npresent = genes.plot %in% rownames(athaliana)
+          cat(dxf, pfx, sum(npresent), sum(!npresent), "\n")
+          if(sum(npresent) > 0) {
+             dot_fname = paste(out.dir, 
+                            paste(pfx, "dot-markers-seurat.", 
+                               img.option, sep=""), 
+                         sep="/")
+             px = DotPlot(athaliana.integrated, features=genes.plot) +
+                      ggtitle(pfx)
+             ggsave(dot_fname, px, width=10, height=4)
+          }
+        }
     }
 
     athaliana.integrated

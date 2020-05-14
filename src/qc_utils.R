@@ -109,17 +109,18 @@ qc_normalize = function(expt.full.dir.path,
     dfx = apply_cell_filters(dfx, F)
     dfx = apply_gene_filters(dfx, F)
     #print(dfx)
-    gnames = as.character(rownames(dfx))
     if(!is.null(include_genes_file) && !is.na(include_genes_file)) {
+        gnames = as.character(rownames(dfx))
         inc_df = read.table(include_genes_file, 
             header=TRUE, stringsAsFactors=FALSE)
         inc_flag = (gnames %in% inc_df[,'ID'])
         dfx = dfx[inc_flag, ]
     }
     if(!is.null(exclude_genes_file) && !is.na(exclude_genes_file)) {
+        gnames = as.character(rownames(dfx))
         exc_df = read.table(exclude_genes_file, header=TRUE, stringsAsFactors=FALSE)
         exc_drop = !(gnames %in% exc_df[,'ID'])
-        dfx = dfx[inc_flag, ]
+        dfx = dfx[exc_drop, ]
     }
     dfx = scran_normalize(dfx)
     dfx

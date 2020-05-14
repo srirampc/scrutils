@@ -125,19 +125,30 @@ harmony_cluster = function(root.dir, data.file, out.dir,
     }
 
     if(!is.na(dot_markers_file)){
-        gdf = read.table(dot_markers_file, sep="\t")
-        genes.plot = gdf$ID
-        dot_fname = paste(out.dir, 
-                        paste("dot-markers-harmony.", img.option, sep=""), 
+        mdf = read.table(dot_markers_file, stringsAsFactors=F, sep="\t")
+        for(dxf in mdf$V1){
+          gdf = read.table(dxf, header=T, 
+                           sep="\t", stringsAsFactors=F)
+          genes.plot = gdf$ID
+          pfx = gsub("\\.tsv", "" , basename(dxf))
+          npresent = genes.plot %in% rownames(athaliana)
+          cat(dxf, pfx, sum(npresent), sum(!npresent), "\n")
+          if(sum(npresent) > 0) {
+              dot_fname = paste(out.dir, 
+                          paste(pfx, "-dot-markers-harmony.", 
+                              img.option, sep=""), 
                        sep="/")
-        p = DotPlot(athaliana, genes.plot)
-        ggsave(dot_fname, px, width=10, height=4)
+              px = DotPlot(athaliana, features=genes.plot) + 
+                  ggtitle(dxf)
+               ggsave(dot_fname, px, width=10, height=4)
+           }
+        }
     }
     athaliana
 }
 
 # Create a parser
-p <- arg_parser("Pre-process, Normalize, Integrate w. Harmony and cluster")
+p <- arg_parser("Pre-process, Normalize, Integrate w. Harmony and Cluster")
 
 # Add command line arguments
 p <- add_argument(p, "root_dir", help="Root directory of datasets", type="character")
@@ -146,12 +157,12 @@ p <- add_argument(p, "data_file_csv",
                   type="character")
 p <- add_argument(p, "out_dir", help="Output directory", type="character")
 p <- add_argument(p, "--qc", help="Flag to indicate to preform qc", short='-q', default=TRUE)
-p <- add_argument(p, "--vis", help="Visualization option should be tsne/umap (default:umap)", short='-v', default='umap')
-p <- add_argument(p, "--img", help="Output image option should be one png/pdf (default:png)", short='-g', default='png')
-p <- add_argument(p, "--exc", help="File containing list of inc. genes (default:None)", short='-e', default=NULL)
-p <- add_argument(p, "--inc", help="File containing list of exc. genes (default:None)", short='-i', default=NULL)
+p <- add_argument(p, "--vis", help="Visualization option should be tsne/umap ", short='-v', default='umap')
+p <- add_argument(p, "--img", help="Output image option should be one png/pdf ", short='-g', default='png')
+p <- add_argument(p, "--exc [glist]", help="File containing list of inc. genes (default:None)", short='-e', default=NULL)
+p <- add_argument(p, "--inc [glist]", help="File containing list of exc. genes (default:None)", short='-i', default=NULL)
 p <- add_argument(p, "--gen_markers", help="Flag to indicate to genreate all markers", short='-m', default=FALSE)
-p <- add_argument(p, "--dot_markers", help="Generate dot plot for markers", short='-d', default=NULL)
+p <- add_argument(p, "--dot_markers [mfile]", help="Generate marker dot plots for each list of markers list in mfile. Each line in mfile is location for a list of markers", short='-d', default=NULL)
 
 # Parse the command line arguments
 argv <- parse_args(p)
