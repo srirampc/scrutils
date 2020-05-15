@@ -90,27 +90,26 @@ harmony_cluster = function(root.dir, data.file, out.dir,
 
     athaliana = combined_seurat_object(athaliana.mlist, short.names)
     if(vis.option == "umap"){
-       combined_umap(athaliana, out.dir, "pca")
+        combined_umap(athaliana, out.dir, "pca")
     }
     if(vis.option == "tsne"){
-       combined_tsne(athaliana, out.dir, "pca")
+        combined_tsne(athaliana, out.dir, "pca")
     }
-#
-   dim_violin_plot(athaliana, "pca", "PC_1", "dataset", 
-		    paste(out.dir, 
+    #
+    dim_violin_plot(athaliana, "pca", "PC_1", "dataset", 
+            paste(out.dir, 
                 paste("dim-pca-grouped.", img.option, sep=""),
                 sep="/"))
     ath.list = integrate_data_harmony(athaliana)
     athaliana = ath.list[[1]]
     harmony_embeddings = ath.list[[2]]
-   dim_violin_plot(athaliana, "harmony", "harmony_1", "dataset",
-                   paste(out.dir, 
+    dim_violin_plot(athaliana, "harmony", "harmony_1", "dataset",
+                    paste(out.dir, 
                     paste("dim-violin-harmony.", img.option, sep=""), 
-                   sep="/"))
+                    sep="/"))
     athaliana = if(vis.option == "umap"){
         combined_umap(athaliana, out.dir, "harmony")
-    }
-    else {
+    } else {
         if(vis.option == "tsne"){
            combined_tsne(athaliana, out.dir, "harmony")
         } else {

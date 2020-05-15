@@ -55,9 +55,8 @@ integrate_seurat_objects = function(athaliana.sobj, anc.feat, ndims = 1:30){
 }
 
 
-combined_seurat_object = function(data.mlist, short.names, dim_name="dataset",
-                                  nfeat=2000, mincells=5, npcs=20) {
-    data.cnames = lapply(1:length(data.mlist), 
+combined_expr_matrix = function(data.mlist, short.names){
+    data.batch_names = lapply(1:length(data.mlist), 
                 function(i){
                     c(rep(short.names[i], ncol(data.mlist[[i]])))
                 })
@@ -65,22 +64,41 @@ combined_seurat_object = function(data.mlist, short.names, dim_name="dataset",
                 function(i){
                     str_c(short.names[i], 1:ncol(data.mlist[[i]]), sep="-")
                 })
-    data.cnames = do.call("c", data.cnames)
+    data.batch_names = do.call("c", data.batch_names)
     data.unames = do.call("c", data.unames)
     data.combmat = do.call("cbind", data.mlist)
     rownames(data.combmat) = rownames(data.mlist[[1]])
     colnames(data.combmat) = data.unames
-    data.sobj = CreateSeuratObject(counts = data.combmat, project = "ATHSC", 
-				   min.cells = mincells)
+    list(data.combmat, data.batch_names)
+}
+
+matrix_seurat_object = function(data.combmat, data.batch_names,
+                                project = "ATHSC", dim_name="dataset", 
+                                mincells=5, nfeat=2000, npcs=20){
+    data.sobj = CreateSeuratObject(counts = data.combmat, project = project, 
+				                   min.cells = mincells)
     data.sobj = data.sobj %>% Seurat::NormalizeData(verbose = FALSE)
     data.sobj = data.sobj %>% FindVariableFeatures(selection.method = "vst", 
-						   nfeatures = nfeat)
-    data.sobj = data.sobj %>% ScaleData(verbose = FALSE) 
+                                                   nfeatures = nfeat)
+    data.sobj = data.sobj %>% ScaleData(verbose = FALSE)
     #
-    data.sobj = data.sobj %>% RunPCA(pc.genes = (data.sobj)@var.genes, 
-				     npcs = npcs, verbose = FALSE)
-    data.sobj@meta.data[dim_name] <- data.cnames
+    if(npcs > 0) {
+        data.sobj = data.sobj %>% RunPCA(pc.genes = (data.sobj)@var.genes, 
+                                         npcs = npcs, verbose = FALSE)
+    }
+    data.sobj@meta.data[dim_name] <- data.batch_names
     data.sobj
+}
+
+combined_seurat_object = function(data.mlist, short.names,
+                                  project = "ATHSC", dim_name="dataset",
+                                  mincells=5, nfeat=2000, npcs=20) {
+    clst = combined_expr_matrix(data.mlist, short.names)
+    data.combmat = clst[[1]]
+    data.batch_names = clst[[2]]
+    matrix_seurat_object(data.combmat, data.batch_names, 
+                         project, dim_name,
+                         mincells, nfeat, npcs)
 }
 
 integrate_data_harmony = function(combo.sobj, dim_name="dataset"){
