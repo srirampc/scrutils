@@ -34,7 +34,7 @@ combined_tsne = function(athaliana, out.dir,
     #
     athaliana = cluster_tsne_seurat(athaliana, reduce_by, 0.5, 1:20)
     #
-    print(athaliana@reductions)
+    #print(athaliana@reductions)
     dim_plot(athaliana, reduce_by="tsne",group="dataset", split="dataset",
 	     width=10, height=4,
 	     out_file=paste(out.dir, 
@@ -52,7 +52,7 @@ combined_tsne = function(athaliana, out.dir,
 }
 
 combined_pca = function(athalina, out.dir, image.option="png"){
-    print(athaliana@reductions)
+    #print(athaliana@reductions)
     dim_plot(athaliana, reduce_by="pca",group="dataset", split="dataset",
 	     width=10, height=4,
 	     out_file=paste(out.dir, 
@@ -117,6 +117,8 @@ harmony_cluster = function(root.dir, data.file, out.dir,
             athaliana
         }
     }
+    print(athaliana@reductions)
+    #print(athaliana@seurat_clusters)
 
     if(gen_markers) {
         mkdf = FindAllMarkers(athaliana)
@@ -132,7 +134,7 @@ harmony_cluster = function(root.dir, data.file, out.dir,
           genes.plot = gdf$ID
           pfx = gsub("\\.tsv", "" , basename(dxf))
           npresent = genes.plot %in% rownames(athaliana)
-          cat(dxf, pfx, sum(npresent), sum(!npresent), "\n")
+          cat(pfx, length(genes.plot), sum(npresent), sum(!npresent), "\n")
           if(sum(npresent) > 0) {
               dot_fname = paste(out.dir, 
                           paste(pfx, "-dot-markers-harmony.", 
