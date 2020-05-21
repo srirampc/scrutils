@@ -75,11 +75,20 @@ combat_cluster = function(root.dir, data.file, out.dir,
     athaliana.combmat = clst[[1]]
     athaliana.batch_names = clst[[2]]
     # Use combat with parametric estimation, no plots
-    athaliana.combmat = ComBat(dat=athaliana.combmat, 
-                               batch=athaliana.batch_names, 
-                               mod=NULL, par.prior=TRUE, prior.plots=FALSE)
+    pheno = data.frame(batch=as.matrix(athaliana.batch_names))
+    modcombat = model.matrix(~1, data=pheno)
+    edata = as.matrix(athaliana.combmat)
+    athaliana.combmat = ComBat(dat=edata, 
+                               batch=pheno$batch, 
+                               mod=modcombat, par.prior=TRUE, prior.plots=FALSE)
+    rownames(athaliana.combmat)=rownames(edata)
+    colnames(athaliana.combmat)=colnames(edata)
+    athaliana.combmat=as.matrix(athaliana.combmat)
+    athaliana.combmat[which(athaliana.combmat<0)]=0
+    athaliana.combmat[which(is.na(athaliana.combmat))]=0
     athaliana.integrated = matrix_seurat_object(athaliana.combmat, 
                                                 athaliana.batch_names, 
+                                                normalize = FALSE,
                                                 project = "ATHSC", npcs=30)
     if(vis.option == "umap"){
         athaliana.integrated = combined_umap(athaliana.integrated, out.dir,
