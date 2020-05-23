@@ -89,7 +89,8 @@ combat_cluster = function(root.dir, data.file, out.dir,
     athaliana.integrated = matrix_seurat_object(athaliana.combmat, 
                                                 athaliana.batch_names, 
                                                 normalize = FALSE,
-                                                project = "ATHSC", npcs=30)
+                                                project = "ATHSC", 
+						nfeat=5000, npcs=30)
     if(vis.option == "umap"){
         athaliana.integrated = combined_umap(athaliana.integrated, out.dir,
                          "pca", 1:30, img.option)
@@ -113,9 +114,11 @@ combat_cluster = function(root.dir, data.file, out.dir,
                            sep="\t", stringsAsFactors=F)
           genes.plot = gdf$ID
           pfx = gsub("\\.tsv", "" , basename(dxf))
-          npresent = genes.plot %in% rownames(athaliana)
-          cat(dxf, pfx, sum(npresent), sum(!npresent), "\n")
+          npresent = genes.plot %in% rownames(athaliana.integrated)
+          cat(dxf, pfx, sum(npresent), sum(!npresent), 
+	      genes.plot[!npresent], "\n")
           if(sum(npresent) > 0) {
+             genes.plot = genes.plot[npresent]
              dot_fname = paste(out.dir, 
                             paste(pfx, "dot-markers-seurat.", 
                                img.option, sep=""), 

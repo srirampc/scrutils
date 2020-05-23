@@ -77,13 +77,14 @@ matrix_seurat_object = function(data.combmat, data.batch_names,
                                 project = "ATHSC", dim_name="dataset", 
                                 mincells=5, nfeat=2000, npcs=20){
     data.sobj = CreateSeuratObject(counts = data.combmat, project = project, 
-				                   min.cells = mincells)
+		                   min.cells = mincells)
     if(normalize == TRUE){
         data.sobj = data.sobj %>% Seurat::NormalizeData(verbose = FALSE)
     }
     data.sobj = data.sobj %>% ScaleData(verbose = FALSE)
     data.sobj = data.sobj %>% FindVariableFeatures(selection.method = "vst", 
-                                                   nfeatures = nfeat)
+                                                   nfeatures = nfeat,
+                                                   verbose=FALSE)
     #
     if(npcs > 0) {
         data.sobj = data.sobj %>% RunPCA(pc.genes = (data.sobj)@var.genes, 
