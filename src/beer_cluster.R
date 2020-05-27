@@ -3,6 +3,7 @@ library(Seurat, quietly=TRUE)
 library(cowplot, quietly=TRUE)
 library(ggplot2, quietly=TRUE)
 library(sva, quietly=TRUE)
+source("BEER.R")
 source("data_utils.R")
 source("qc_utils.R")
 source("plot_utils.R")
@@ -53,7 +54,7 @@ combined_tsne = function(athaliana, out.dir, reduce_by="pca",
 }
 
 
-combat_cluster = function(root.dir, data.file, out.dir, 
+beer_cluster = function(root.dir, data.file, out.dir, 
                         qc.flag, vis.option, img.option,
                         inc_list_file, exec_list_file,
                         gen_markers, dot_markers_file){
@@ -74,31 +75,8 @@ combat_cluster = function(root.dir, data.file, out.dir,
     clst = combined_expr_matrix(athaliana.mlist, short.names)
     athaliana.combmat = clst[[1]]
     athaliana.batch_names = clst[[2]]
-    # Use combat with parametric estimation, no plots
-    pheno = data.frame(batch=as.matrix(athaliana.batch_names))
-    modcombat = model.matrix(~1, data=pheno)
-    edata = as.matrix(athaliana.combmat)
-    athaliana.combmat = ComBat(dat=edata, 
-                               batch=pheno$batch, 
-                               mod=modcombat, par.prior=TRUE, prior.plots=FALSE)
-    rownames(athaliana.combmat)=rownames(edata)
-    colnames(athaliana.combmat)=colnames(edata)
-    athaliana.combmat=as.matrix(athaliana.combmat)
-    athaliana.combmat[which(athaliana.combmat<0)]=0
-    athaliana.combmat[which(is.na(athaliana.combmat))]=0
-
-    data.sobj = CreateSeuratObject(counts = athaliana.combmat, project = "ATHSC", 
-                                   min.cells = 5)
-    data.sobj = data.sobj %>% NormalizeData(verbose = FALSE, method="RC")
-    data.sobj = data.sobj %>% ScaleData(verbose = FALSE)
-    data.sobj = data.sobj %>% FindVariableFeatures(selection.method = "vst", 
-                                                   nfeatures = 5000,
-                                                   verbose=FALSE)
-    data.sobj = data.sobj %>% RunPCA(pc.genes = (data.sobj)@var.genes, 
-                                      npcs = 20,
-                                      verbose = FALSE)
-    data.sobj@meta.data[dim_name] = athaliana.batch_names
-    athaliana.integrated = data.sobj
+    beer.obj = BEER(athaliana.combmat, athaliana.batch_names)
+    athaliana.integrated = beer.sobj$seurat
 
     if(vis.option == "umap"){
         athaliana.integrated = combined_umap(athaliana.integrated, out.dir,
@@ -142,7 +120,7 @@ combat_cluster = function(root.dir, data.file, out.dir,
     athaliana.integrated
 }
 # Create a parser
-p <- arg_parser("Pre-process, Normalize, Integrate w. Combat and Cluster")
+p <- arg_parser("Pre-process, Normalize, Integrate w. BEER and Cluster")
 
 # Add command line arguments
 p <- add_argument(p, "root_dir", help="Root directory of datasets", type="character")
