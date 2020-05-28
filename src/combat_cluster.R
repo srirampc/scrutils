@@ -89,15 +89,15 @@ combat_cluster = function(root.dir, data.file, out.dir,
 
     data.sobj = CreateSeuratObject(counts = athaliana.combmat, project = "ATHSC", 
                                    min.cells = 5)
-    data.sobj = data.sobj %>% NormalizeData(verbose = FALSE, method="RC")
+    data.sobj = data.sobj %>% NormalizeData(verbose = FALSE, normalization.method="RC")
     data.sobj = data.sobj %>% ScaleData(verbose = FALSE)
     data.sobj = data.sobj %>% FindVariableFeatures(selection.method = "vst", 
                                                    nfeatures = 5000,
                                                    verbose=FALSE)
     data.sobj = data.sobj %>% RunPCA(pc.genes = (data.sobj)@var.genes, 
-                                      npcs = 20,
+                                      npcs = 30,
                                       verbose = FALSE)
-    data.sobj@meta.data[dim_name] = athaliana.batch_names
+    data.sobj@meta.data["dataset"] = athaliana.batch_names
     athaliana.integrated = data.sobj
 
     if(vis.option == "umap"){
@@ -125,7 +125,7 @@ combat_cluster = function(root.dir, data.file, out.dir,
           pfx = gsub("\\.tsv", "" , basename(dxf))
           npresent = genes.plot %in% rownames(athaliana.integrated)
           cat(dxf, pfx, sum(npresent), sum(!npresent), 
-	      genes.plot[!npresent], "\n")
+	                genes.plot[!npresent], "\n")
           if(sum(npresent) > 0) {
              genes.plot = genes.plot[npresent]
              dot_fname = paste(out.dir, 
