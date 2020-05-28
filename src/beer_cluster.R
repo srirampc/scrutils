@@ -17,14 +17,14 @@ combined_umap = function(athaliana, out.dir, reduce_by="pca",
     dim_plot(athaliana, reduce_by="umap",group="dataset", split="dataset",
          width=10, height=4,
          out_file=paste(out.dir, 
-                paste(reduce_by, "-combat-umap-grouped.", 
+                paste(reduce_by, "-beer-umap-grouped.", 
                   img.option, sep=""), 
                 sep="/"))
     #
     dim_plot(athaliana, reduce_by="umap",group=NULL, label=TRUE,
          width=6, height=4,
          out_file=paste(out.dir, 
-                paste(reduce_by, "-combat-umap-integrated.", 
+                paste(reduce_by, "-beer-umap-integrated.", 
                   img.option, sep=""), 
                 sep="/"))
     athaliana
@@ -40,14 +40,14 @@ combined_tsne = function(athaliana, out.dir, reduce_by="pca",
     dim_plot(athaliana, reduce_by="tsne",group="dataset", split="dataset",
          width=10, height=4,
          out_file=paste(out.dir, 
-                paste(reduce_by, "-combat-tsne-grouped.",
+                paste(reduce_by, "-beer-tsne-grouped.",
                   img.option, sep=""), 
                 sep="/"))
     #
     dim_plot(athaliana, reduce_by="tsne",group=NULL, label=TRUE,
          width=6, height=4,
          out_file=paste(out.dir, 
-                paste(reduce_by, "-combat-tsne-integrated.", 
+                paste(reduce_by, "-beer-tsne-integrated.", 
                   img.option, sep=""), 
                 sep="/"))
     athaliana
@@ -141,7 +141,7 @@ argv <- parse_args(p)
 
 if((argv$vis == "tsne" || argv$vis == "umap") && 
    (argv$img == "png" || argv$img == "pdf")) {
-         combat_cluster(argv$root_dir, argv$data_file_csv,
+         beer_cluster(argv$root_dir, argv$data_file_csv,
                 argv$out_dir, argv$qc, argv$vis, argv$img, 
                 argv$inc, argv$exec, 
                 argv$gen_markers, argv$dot_markers)
