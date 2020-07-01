@@ -65,7 +65,7 @@ beer_cluster = function(root.dir, data.file, out.dir,
     project.names = data.df[, 'project.names']
     
     athaliana.mlist = if(as.logical(qc.flag)){
-        qcload_10X_matrices(root.dir, expt.dir.paths,
+        qcload_10X_matrices_union(root.dir, expt.dir.paths,
                             project.names, qc_normalize_matrix,
                             inc_list_file, exec_list_file)
     } else {
@@ -76,7 +76,8 @@ beer_cluster = function(root.dir, data.file, out.dir,
     athaliana.combmat = clst[[1]]
     athaliana.batch_names = clst[[2]]
     beer.obj = BEER(athaliana.combmat, athaliana.batch_names)
-    athaliana.integrated = beer.sobj$seurat
+    athaliana.integrated = beer.obj$seurat
+    athaliana.integrated@meta.data["dataset"] = athaliana.batch_names
 
     if(vis.option == "umap"){
         athaliana.integrated = combined_umap(athaliana.integrated, out.dir,
@@ -88,7 +89,7 @@ beer_cluster = function(root.dir, data.file, out.dir,
     }
     if(gen_markers) {
         mkdf = FindAllMarkers(athaliana.integrated)
-        write.table(mkdf, paste(out.dir, paste(vis.option, "-seurat-markers.tsv", 
+        write.table(mkdf, paste(out.dir, paste(vis.option, "-beer-markers.tsv", 
                                 sep=""),
                     sep="/"), 
                     row.names=FALSE, sep="\t")
@@ -107,12 +108,12 @@ beer_cluster = function(root.dir, data.file, out.dir,
           if(sum(npresent) > 0) {
              genes.plot = genes.plot[npresent]
              dot_fname = paste(out.dir, 
-                            paste(pfx, "dot-markers-seurat.", 
+                            paste(pfx, "-beer-dot-markers-seurat.", 
                                img.option, sep=""), 
                          sep="/")
              px = DotPlot(athaliana.integrated, features=genes.plot) +
                       ggtitle(pfx)
-             ggsave(dot_fname, px, width=10, height=4)
+             ggsave(dot_fname, px, width=16, height=8)
           }
         }
     }

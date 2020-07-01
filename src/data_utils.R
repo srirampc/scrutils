@@ -14,12 +14,42 @@ load_10X_matrices = function(base.dir, dir.paths, data.names) {
 
     common.gene.names = rownames(mat10x.list[[1]])
     for(i in 2:length(mat10x.list)){
-    common.gene.names = intersect(common.gene.names,
-                rownames(mat10x.list[[i]]))
+         common.gene.names = intersect(common.gene.names,
+         rownames(mat10x.list[[i]]))
     }
 
     for(i in 1:length(mat10x.list)){
         mat10x.list[[i]] = mat10x.list[[i]][common.gene.names,]
+    }
+    print(sapply(mat10x.list, dim))
+    mat10x.list
+}
+
+load_10X_matrices_union = function(base.dir, dir.paths, data.names) {
+    mat10x.list = lapply(1:length(dir.paths),
+        function(i){
+            mtx = Read10X(paste(base.dir, dir.paths[i], sep=""))
+            mtx
+    })
+    names(mat10x.list) = data.names
+    print(sapply(mat10x.list, dim))
+
+    all.gene.names = rownames(mat10x.list[[1]])
+    for(i in 2:length(mat10x.list)){
+         all.gene.names = union(all.gene.names,
+                                rownames(mat10x.list[[i]]))
+    }
+
+    for(i in 1:length(mat10x.list)){
+        missing.genes = setdiff(all.gene.names, 
+                                rownames(mat10x.list[[i]]))
+        mtx1 = as.matrix(mat10x.list[[i]])
+	mtx2 = matrix(rep(0, dim(mtx1[2]) * length(missing.genes)), 
+                      nrow = length(missing.genes),
+                      ncol = dim(mtx1[2]))
+	rownames(mtx2) = missing.genes
+	mtx = rbind(mtx1, mtx2)
+        mat10x.list[[i]] = mtx[all.gene.names,]
     }
     print(sapply(mat10x.list, dim))
     mat10x.list
@@ -168,6 +198,46 @@ qcload_10X_matrices = function(base.dir, dir.paths, data.names, qc.function,
     mat10x.list
 }
 
+
+qcload_10X_matrices_union = function(base.dir, dir.paths, data.names, qc.function,
+                                     inc_list_file, exc_list_file) {
+    mat10x.list = lapply(1:length(dir.paths),
+        function(i){
+            # dfx = qc_normalize(paste(base.dir, dir.paths[i], sep="/"))
+            # ctmtx = counts(dfx)
+            # print(dim(ctmtx))
+            # rownames(ctmtx) = rownames(dfx)
+            # colnames(ctmtx) = 1:dim(dfx)[2]
+            # ctmtx
+            cat("Loading ", dir.paths[i], "...\n")
+            qc.function(paste(base.dir, dir.paths[i], sep="/"),
+                        inc_list_file, exc_list_file)
+    })
+    names(mat10x.list) = data.names
+    print(sapply(mat10x.list, dim))
+
+    all.gene.names = rownames(mat10x.list[[1]])
+    for(i in 2:length(mat10x.list)){
+        all.gene.names = union(all.gene.names,
+                               rownames(mat10x.list[[i]]))
+    }
+
+    for(i in 1:length(mat10x.list)){
+        missing.genes = setdiff(all.gene.names, 
+                                rownames(mat10x.list[[i]]))
+        mtx1 = as.matrix(mat10x.list[[i]])
+	mtx2 = matrix(rep(0, dim(mtx1)[2] * length(missing.genes)), 
+                      nrow = length(missing.genes),
+                      ncol = dim(mtx1)[2])
+	rownames(mtx2) = missing.genes
+	mtx = rbind(mtx1, mtx2)
+        mat10x.list[[i]] = mtx[all.gene.names,]
+    }
+    cat("Matrix Objects loaded for all datasets",
+        sapply(mat10x.list, dim) ,"\n")
+
+    mat10x.list
+}
 
 qcload_10X_seurat_objects = function(base.dir, dir.paths, data.names, 
                                      short.names, qc.function,
