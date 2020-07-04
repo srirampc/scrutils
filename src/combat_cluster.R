@@ -129,12 +129,12 @@ combat_cluster = function(root.dir, data.file, out.dir,
           if(sum(npresent) > 0) {
              genes.plot = genes.plot[npresent]
              dot_fname = paste(out.dir, 
-                            paste(pfx, "dot-markers-seurat.", 
+                            paste(pfx, "-combat-dot-markers-seurat.", 
                                img.option, sep=""), 
                          sep="/")
              px = DotPlot(athaliana.integrated, features=genes.plot) +
                       ggtitle(pfx)
-             ggsave(dot_fname, px, width=10, height=4)
+             ggsave(dot_fname, px, width=16, height=8)
           }
         }
     }
