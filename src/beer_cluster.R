@@ -3,6 +3,7 @@ library(Seurat, quietly=TRUE)
 library(cowplot, quietly=TRUE)
 library(ggplot2, quietly=TRUE)
 library(sva, quietly=TRUE)
+source("BEER.R")
 source("data_utils.R")
 source("qc_utils.R")
 source("plot_utils.R")
@@ -16,14 +17,14 @@ combined_umap = function(athaliana, out.dir, reduce_by="pca",
     dim_plot(athaliana, reduce_by="umap",group="dataset", split="dataset",
          width=10, height=4,
          out_file=paste(out.dir, 
-                paste(reduce_by, "-combat-umap-grouped.", 
+                paste(reduce_by, "-beer-umap-grouped.", 
                   img.option, sep=""), 
                 sep="/"))
     #
     dim_plot(athaliana, reduce_by="umap",group=NULL, label=TRUE,
          width=6, height=4,
          out_file=paste(out.dir, 
-                paste(reduce_by, "-combat-umap-integrated.", 
+                paste(reduce_by, "-beer-umap-integrated.", 
                   img.option, sep=""), 
                 sep="/"))
     athaliana
@@ -39,21 +40,21 @@ combined_tsne = function(athaliana, out.dir, reduce_by="pca",
     dim_plot(athaliana, reduce_by="tsne",group="dataset", split="dataset",
          width=10, height=4,
          out_file=paste(out.dir, 
-                paste(reduce_by, "-combat-tsne-grouped.",
+                paste(reduce_by, "-beer-tsne-grouped.",
                   img.option, sep=""), 
                 sep="/"))
     #
     dim_plot(athaliana, reduce_by="tsne",group=NULL, label=TRUE,
          width=6, height=4,
          out_file=paste(out.dir, 
-                paste(reduce_by, "-combat-tsne-integrated.", 
+                paste(reduce_by, "-beer-tsne-integrated.", 
                   img.option, sep=""), 
                 sep="/"))
     athaliana
 }
 
 
-combat_cluster = function(root.dir, data.file, out.dir, 
+beer_cluster = function(root.dir, data.file, out.dir, 
                         qc.flag, vis.option, img.option,
                         inc_list_file, exec_list_file,
                         gen_markers, dot_markers_file){
@@ -64,7 +65,7 @@ combat_cluster = function(root.dir, data.file, out.dir,
     project.names = data.df[, 'project.names']
     
     athaliana.mlist = if(as.logical(qc.flag)){
-        qcload_10X_matrices(root.dir, expt.dir.paths,
+        qcload_10X_matrices_union(root.dir, expt.dir.paths,
                             project.names, qc_normalize_matrix,
                             inc_list_file, exec_list_file)
     } else {
@@ -74,31 +75,9 @@ combat_cluster = function(root.dir, data.file, out.dir,
     clst = combined_expr_matrix(athaliana.mlist, short.names)
     athaliana.combmat = clst[[1]]
     athaliana.batch_names = clst[[2]]
-    # Use combat with parametric estimation, no plots
-    pheno = data.frame(batch=as.matrix(athaliana.batch_names))
-    modcombat = model.matrix(~1, data=pheno)
-    edata = as.matrix(athaliana.combmat)
-    athaliana.combmat = ComBat(dat=edata, 
-                               batch=pheno$batch, 
-                               mod=modcombat, par.prior=TRUE, prior.plots=FALSE)
-    rownames(athaliana.combmat)=rownames(edata)
-    colnames(athaliana.combmat)=colnames(edata)
-    athaliana.combmat=as.matrix(athaliana.combmat)
-    athaliana.combmat[which(athaliana.combmat<0)]=0
-    athaliana.combmat[which(is.na(athaliana.combmat))]=0
-
-    data.sobj = CreateSeuratObject(counts = athaliana.combmat, project = "ATHSC", 
-                                   min.cells = 5)
-    data.sobj = data.sobj %>% NormalizeData(verbose = FALSE, normalization.method="RC")
-    data.sobj = data.sobj %>% ScaleData(verbose = FALSE)
-    data.sobj = data.sobj %>% FindVariableFeatures(selection.method = "vst", 
-                                                   nfeatures = 5000,
-                                                   verbose=FALSE)
-    data.sobj = data.sobj %>% RunPCA(pc.genes = (data.sobj)@var.genes, 
-                                      npcs = 30,
-                                      verbose = FALSE)
-    data.sobj@meta.data["dataset"] = athaliana.batch_names
-    athaliana.integrated = data.sobj
+    beer.obj = BEER(athaliana.combmat, athaliana.batch_names)
+    athaliana.integrated = beer.obj$seurat
+    athaliana.integrated@meta.data["dataset"] = athaliana.batch_names
 
     if(vis.option == "umap"){
         athaliana.integrated = combined_umap(athaliana.integrated, out.dir,
@@ -110,7 +89,7 @@ combat_cluster = function(root.dir, data.file, out.dir,
     }
     if(gen_markers) {
         mkdf = FindAllMarkers(athaliana.integrated)
-        write.table(mkdf, paste(out.dir, paste(vis.option, "-seurat-markers.tsv", 
+        write.table(mkdf, paste(out.dir, paste(vis.option, "-beer-markers.tsv", 
                                 sep=""),
                     sep="/"), 
                     row.names=FALSE, sep="\t")
@@ -125,11 +104,11 @@ combat_cluster = function(root.dir, data.file, out.dir,
           pfx = gsub("\\.tsv", "" , basename(dxf))
           npresent = genes.plot %in% rownames(athaliana.integrated)
           cat(dxf, pfx, sum(npresent), sum(!npresent), 
-	                genes.plot[!npresent], "\n")
+	      genes.plot[!npresent], "\n")
           if(sum(npresent) > 0) {
              genes.plot = genes.plot[npresent]
              dot_fname = paste(out.dir, 
-                            paste(pfx, "-combat-dot-markers-seurat.", 
+                            paste(pfx, "-beer-dot-markers-seurat.", 
                                img.option, sep=""), 
                          sep="/")
              px = DotPlot(athaliana.integrated, features=genes.plot) +
@@ -142,7 +121,7 @@ combat_cluster = function(root.dir, data.file, out.dir,
     athaliana.integrated
 }
 # Create a parser
-p <- arg_parser("Pre-process, Normalize, Integrate w. Combat and Cluster")
+p <- arg_parser("Pre-process, Normalize, Integrate w. BEER and Cluster")
 
 # Add command line arguments
 p <- add_argument(p, "root_dir", help="Root directory of datasets", type="character")
@@ -163,7 +142,7 @@ argv <- parse_args(p)
 
 if((argv$vis == "tsne" || argv$vis == "umap") && 
    (argv$img == "png" || argv$img == "pdf")) {
-         combat_cluster(argv$root_dir, argv$data_file_csv,
+         beer_cluster(argv$root_dir, argv$data_file_csv,
                 argv$out_dir, argv$qc, argv$vis, argv$img, 
                 argv$inc, argv$exec, 
                 argv$gen_markers, argv$dot_markers)

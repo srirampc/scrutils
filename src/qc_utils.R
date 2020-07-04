@@ -102,9 +102,9 @@ apply_gene_filters = function(dfx, print=T){
     dfx[!feat_drop, ]
 }
 
-qc_normalize = function(expt.full.dir.path, 
-                        include_genes_file,
-                        exclude_genes_file){
+apply_qc = function(expt.full.dir.path, 
+                    include_genes_file,
+                    exclude_genes_file){
     dfx = read10xCounts(expt.full.dir.path)
     dfx = apply_cell_filters(dfx, F)
     dfx = apply_gene_filters(dfx, F)
@@ -122,8 +122,29 @@ qc_normalize = function(expt.full.dir.path,
         exc_drop = !(gnames %in% exc_df[,'ID'])
         dfx = dfx[exc_drop, ]
     }
-    dfx = scran_normalize(dfx)
     dfx
+}
+
+qc_normalize = function(expt.full.dir.path, 
+                        include_genes_file,
+                        exclude_genes_file){
+    scran_normalize(apply_qc(
+        expt.full.dir.path, 
+        include_genes_file,
+        exclude_genes_file))
+}
+
+apply_qc_matrix = function(expt.full.dir.path,
+                               include_genes_file,
+                               exclude_genes_file){
+    dfx = apply_qc(expt.full.dir.path,
+                include_genes_file,
+                exclude_genes_file)
+    ctmtx = counts(dfx)
+    print(dim(ctmtx))
+    rownames(ctmtx) = rownames(dfx)
+    colnames(ctmtx) = 1:dim(dfx)[2]
+    ctmtx
 }
 
 qc_normalize_matrix = function(expt.full.dir.path,

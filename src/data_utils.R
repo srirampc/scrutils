@@ -14,12 +14,42 @@ load_10X_matrices = function(base.dir, dir.paths, data.names) {
 
     common.gene.names = rownames(mat10x.list[[1]])
     for(i in 2:length(mat10x.list)){
-    common.gene.names = intersect(common.gene.names,
-                rownames(mat10x.list[[i]]))
+         common.gene.names = intersect(common.gene.names,
+         rownames(mat10x.list[[i]]))
     }
 
     for(i in 1:length(mat10x.list)){
         mat10x.list[[i]] = mat10x.list[[i]][common.gene.names,]
+    }
+    print(sapply(mat10x.list, dim))
+    mat10x.list
+}
+
+load_10X_matrices_union = function(base.dir, dir.paths, data.names) {
+    mat10x.list = lapply(1:length(dir.paths),
+        function(i){
+            mtx = Read10X(paste(base.dir, dir.paths[i], sep=""))
+            mtx
+    })
+    names(mat10x.list) = data.names
+    print(sapply(mat10x.list, dim))
+
+    all.gene.names = rownames(mat10x.list[[1]])
+    for(i in 2:length(mat10x.list)){
+         all.gene.names = union(all.gene.names,
+                                rownames(mat10x.list[[i]]))
+    }
+
+    for(i in 1:length(mat10x.list)){
+        missing.genes = setdiff(all.gene.names, 
+                                rownames(mat10x.list[[i]]))
+        mtx1 = as.matrix(mat10x.list[[i]])
+	mtx2 = matrix(rep(0, dim(mtx1[2]) * length(missing.genes)), 
+                      nrow = length(missing.genes),
+                      ncol = dim(mtx1[2]))
+	rownames(mtx2) = missing.genes
+	mtx = rbind(mtx1, mtx2)
+        mat10x.list[[i]] = mtx[all.gene.names,]
     }
     print(sapply(mat10x.list, dim))
     mat10x.list
@@ -73,30 +103,34 @@ combined_expr_matrix = function(data.mlist, short.names){
 }
 
 matrix_seurat_object = function(data.combmat, data.batch_names,
+                                normalize = TRUE,
                                 project = "ATHSC", dim_name="dataset", 
                                 mincells=5, nfeat=2000, npcs=20){
     data.sobj = CreateSeuratObject(counts = data.combmat, project = project, 
-				                   min.cells = mincells)
-    data.sobj = data.sobj %>% Seurat::NormalizeData(verbose = FALSE)
-    data.sobj = data.sobj %>% FindVariableFeatures(selection.method = "vst", 
-                                                   nfeatures = nfeat)
+		                   min.cells = mincells)
+    data.sobj@meta.data[dim_name] <- data.batch_names
+    if(normalize == TRUE){
+        data.sobj = data.sobj %>% Seurat::NormalizeData(verbose = FALSE)
+    }
     data.sobj = data.sobj %>% ScaleData(verbose = FALSE)
+    data.sobj = data.sobj %>% FindVariableFeatures(selection.method = "vst", 
+                                                   nfeatures = nfeat,
+                                                   verbose=FALSE)
     #
     if(npcs > 0) {
         data.sobj = data.sobj %>% RunPCA(pc.genes = (data.sobj)@var.genes, 
                                          npcs = npcs, verbose = FALSE)
     }
-    data.sobj@meta.data[dim_name] <- data.batch_names
     data.sobj
 }
 
-combined_seurat_object = function(data.mlist, short.names,
+combined_seurat_object = function(data.mlist, short.names, normalize=TRUE,
                                   project = "ATHSC", dim_name="dataset",
                                   mincells=5, nfeat=2000, npcs=20) {
     clst = combined_expr_matrix(data.mlist, short.names)
     data.combmat = clst[[1]]
     data.batch_names = clst[[2]]
-    matrix_seurat_object(data.combmat, data.batch_names, 
+    matrix_seurat_object(data.combmat, data.batch_names, normalize,
                          project, dim_name,
                          mincells, nfeat, npcs)
 }
@@ -164,6 +198,46 @@ qcload_10X_matrices = function(base.dir, dir.paths, data.names, qc.function,
     mat10x.list
 }
 
+
+qcload_10X_matrices_union = function(base.dir, dir.paths, data.names, qc.function,
+                                     inc_list_file, exc_list_file) {
+    mat10x.list = lapply(1:length(dir.paths),
+        function(i){
+            # dfx = qc_normalize(paste(base.dir, dir.paths[i], sep="/"))
+            # ctmtx = counts(dfx)
+            # print(dim(ctmtx))
+            # rownames(ctmtx) = rownames(dfx)
+            # colnames(ctmtx) = 1:dim(dfx)[2]
+            # ctmtx
+            cat("Loading ", dir.paths[i], "...\n")
+            qc.function(paste(base.dir, dir.paths[i], sep="/"),
+                        inc_list_file, exc_list_file)
+    })
+    names(mat10x.list) = data.names
+    print(sapply(mat10x.list, dim))
+
+    all.gene.names = rownames(mat10x.list[[1]])
+    for(i in 2:length(mat10x.list)){
+        all.gene.names = union(all.gene.names,
+                               rownames(mat10x.list[[i]]))
+    }
+
+    for(i in 1:length(mat10x.list)){
+        missing.genes = setdiff(all.gene.names, 
+                                rownames(mat10x.list[[i]]))
+        mtx1 = as.matrix(mat10x.list[[i]])
+	mtx2 = matrix(rep(0, dim(mtx1)[2] * length(missing.genes)), 
+                      nrow = length(missing.genes),
+                      ncol = dim(mtx1)[2])
+	rownames(mtx2) = missing.genes
+	mtx = rbind(mtx1, mtx2)
+        mat10x.list[[i]] = mtx[all.gene.names,]
+    }
+    cat("Matrix Objects loaded for all datasets",
+        sapply(mat10x.list, dim) ,"\n")
+
+    mat10x.list
+}
 
 qcload_10X_seurat_objects = function(base.dir, dir.paths, data.names, 
                                      short.names, qc.function,

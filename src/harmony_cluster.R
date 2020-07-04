@@ -16,14 +16,14 @@ combined_umap = function(athaliana, out.dir, reduce_by="harmony",
     dim_plot(athaliana, reduce_by="umap",group="dataset", split="dataset",
 	     width=10, height=4,
 	     out_file=paste(out.dir, 
-			    paste(reduce_by, "-dim-umap-grouped.",
+			    paste(reduce_by, "-umap-grouped.",
                       image.option, sep=""), 
 			    sep="/"))
     #
     dim_plot(athaliana, reduce_by="umap",group=NULL, label=TRUE,
 	     width=6, height=4,
 	     out_file=paste(out.dir, 
-			    paste(reduce_by, "-dim-umap-integrated.",
+			    paste(reduce_by, "-umap-integrated.",
                       image.option, sep=""),
 			    sep="/"))
     athaliana
@@ -38,14 +38,14 @@ combined_tsne = function(athaliana, out.dir,
     dim_plot(athaliana, reduce_by="tsne",group="dataset", split="dataset",
 	     width=10, height=4,
 	     out_file=paste(out.dir, 
-			    paste(reduce_by, "-dim-tsne-grouped.",
+			    paste(reduce_by, "-tsne-grouped.",
                       image.option, sep=""), 
 			    sep="/"))
     #
     dim_plot(athaliana, reduce_by="tsne",group=NULL, label=TRUE,
 	     width=6, height=4,
 	     out_file=paste(out.dir, 
-			    paste(reduce_by, "-dim-tsne-integrated.",
+			    paste(reduce_by, "-tsne-integrated.",
                       image.option, sep=""), 
 			    sep="/"))
     athaliana
@@ -56,14 +56,14 @@ combined_pca = function(athalina, out.dir, image.option="png"){
     dim_plot(athaliana, reduce_by="pca",group="dataset", split="dataset",
 	     width=10, height=4,
 	     out_file=paste(out.dir, 
-			    paste(reduce_by, "-dim-pca-grouped.",
+			    paste(reduce_by, "-pca-grouped.",
                       image.option, sep=""),
 			    sep="/"))
     #
     dim_plot(athaliana, reduce_by="pca",group=NULL, label=TRUE,
 	     width=6, height=4,
 	     out_file=paste(out.dir, 
-			    paste(reduce_by, "dim-pca-combined.",
+			    paste(reduce_by, "-pca-combined.",
                       image.option, sep=""),
 			    sep="/"))
     athaliana
@@ -80,7 +80,7 @@ harmony_cluster = function(root.dir, data.file, out.dir,
     project.names = data.df[, 'project.names']
     
     athaliana.mlist = if(as.logical(qc.flag)){
-        qcload_10X_matrices(root.dir, expt.dir.paths,
+        qcload_10X_matrices_union(root.dir, expt.dir.paths,
                             project.names, qc_normalize_matrix,
                             inc_list_file, exec_list_file)
     } else {
@@ -90,28 +90,28 @@ harmony_cluster = function(root.dir, data.file, out.dir,
 
     athaliana = combined_seurat_object(athaliana.mlist, short.names)
     if(vis.option == "umap"){
-        combined_umap(athaliana, out.dir, "pca")
+        combined_umap(athaliana, out.dir, "pca", img.option)
     }
     if(vis.option == "tsne"){
-        combined_tsne(athaliana, out.dir, "pca")
+        combined_tsne(athaliana, out.dir, "pca", img.option)
     }
     #
     dim_violin_plot(athaliana, "pca", "PC_1", "dataset", 
             paste(out.dir, 
-                paste("dim-pca-grouped.", img.option, sep=""),
+                paste("violin-pca-grouped.", img.option, sep=""),
                 sep="/"))
     ath.list = integrate_data_harmony(athaliana)
     athaliana = ath.list[[1]]
     harmony_embeddings = ath.list[[2]]
     dim_violin_plot(athaliana, "harmony", "harmony_1", "dataset",
                     paste(out.dir, 
-                    paste("dim-violin-harmony.", img.option, sep=""), 
+                    paste("violin-harmony.", img.option, sep=""), 
                     sep="/"))
     athaliana = if(vis.option == "umap"){
-        combined_umap(athaliana, out.dir, "harmony")
+        combined_umap(athaliana, out.dir, "harmony", img.option)
     } else {
         if(vis.option == "tsne"){
-           combined_tsne(athaliana, out.dir, "harmony")
+           combined_tsne(athaliana, out.dir, "harmony", img.option)
         } else {
             athaliana
         }
