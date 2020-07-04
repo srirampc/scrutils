@@ -108,6 +108,7 @@ matrix_seurat_object = function(data.combmat, data.batch_names,
                                 mincells=5, nfeat=2000, npcs=20){
     data.sobj = CreateSeuratObject(counts = data.combmat, project = project, 
 		                   min.cells = mincells)
+    data.sobj@meta.data[dim_name] <- data.batch_names
     if(normalize == TRUE){
         data.sobj = data.sobj %>% Seurat::NormalizeData(verbose = FALSE)
     }
@@ -120,17 +121,16 @@ matrix_seurat_object = function(data.combmat, data.batch_names,
         data.sobj = data.sobj %>% RunPCA(pc.genes = (data.sobj)@var.genes, 
                                          npcs = npcs, verbose = FALSE)
     }
-    data.sobj@meta.data[dim_name] <- data.batch_names
     data.sobj
 }
 
-combined_seurat_object = function(data.mlist, short.names,
+combined_seurat_object = function(data.mlist, short.names, normalize=TRUE,
                                   project = "ATHSC", dim_name="dataset",
                                   mincells=5, nfeat=2000, npcs=20) {
     clst = combined_expr_matrix(data.mlist, short.names)
     data.combmat = clst[[1]]
     data.batch_names = clst[[2]]
-    matrix_seurat_object(data.combmat, data.batch_names, 
+    matrix_seurat_object(data.combmat, data.batch_names, normalize,
                          project, dim_name,
                          mincells, nfeat, npcs)
 }

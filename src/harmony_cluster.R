@@ -90,10 +90,10 @@ harmony_cluster = function(root.dir, data.file, out.dir,
 
     athaliana = combined_seurat_object(athaliana.mlist, short.names)
     if(vis.option == "umap"){
-        combined_umap(athaliana, out.dir, "pca")
+        combined_umap(athaliana, out.dir, "pca", img.option)
     }
     if(vis.option == "tsne"){
-        combined_tsne(athaliana, out.dir, "pca")
+        combined_tsne(athaliana, out.dir, "pca", img.option)
     }
     #
     dim_violin_plot(athaliana, "pca", "PC_1", "dataset", 
@@ -108,10 +108,10 @@ harmony_cluster = function(root.dir, data.file, out.dir,
                     paste("violin-harmony.", img.option, sep=""), 
                     sep="/"))
     athaliana = if(vis.option == "umap"){
-        combined_umap(athaliana, out.dir, "harmony")
+        combined_umap(athaliana, out.dir, "harmony", img.option)
     } else {
         if(vis.option == "tsne"){
-           combined_tsne(athaliana, out.dir, "harmony")
+           combined_tsne(athaliana, out.dir, "harmony", img.option)
         } else {
             athaliana
         }
